@@ -1,0 +1,1796 @@
+<!doctype html>
+<html lang="hu"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src https: data:; connect-src https:;">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07080c">
+<title>Kesu Wallet – Web</title>
+<style>
+:root{
+  --bg:#07080c; --bg2:#0c0e14; --panel:#11141c; --panel2:#171b26; --line:#232838; --line2:#2d3448;
+  --text:#eef1f7; --muted:#8d95a8; --faint:#5a6277;
+  --acc:#8b6cff; --acc2:#5b8cff; --accSoft:color-mix(in srgb,var(--acc) 14%,transparent);
+  --up:#22c55e; --upSoft:rgba(34,197,94,.13); --down:#f04452; --downSoft:rgba(240,68,82,.13);
+  --warn:#f5b83d; --warnSoft:rgba(245,184,61,.13);
+  --r:16px; --font:"Segoe UI Variable Text","Segoe UI",Inter,system-ui,sans-serif;
+  --mono:"Cascadia Mono",Consolas,ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.45 var(--font);overflow:hidden;
+  -webkit-font-smoothing:antialiased;user-select:none}
+input,button{font:inherit;color:inherit}
+input{user-select:text}
+button:focus-visible,.act:focus-visible{outline:2px solid var(--acc);outline-offset:2px}button:focus:not(:focus-visible){outline:none}
+button{cursor:pointer;border:0;background:none}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#232838;border-radius:10px;border:3px solid var(--bg)}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+.up{color:var(--up)}.down{color:var(--down)}.muted{color:var(--muted)}.faint{color:var(--faint)}
+
+/* ---- elrendezés ---- */
+#app{display:flex;height:100%}
+.sidebar{width:232px;flex:none;background:var(--bg2);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:22px 14px}
+.brand{display:flex;align-items:center;gap:11px;padding:0 8px 26px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:grid;place-items:center;font-weight:800;font-size:18px;box-shadow:0 8px 24px color-mix(in srgb,var(--acc) 35%,transparent)}
+.brand b{font-size:16px;letter-spacing:.2px}.brand small{display:block;color:var(--faint);font-size:11.5px;margin-top:-2px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav button{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:var(--muted);font-weight:600;text-align:left;transition:.15s}
+.nav button:hover{background:var(--panel);color:var(--text)}
+.nav button.on{background:var(--accSoft);color:var(--text)}
+.nav button.on svg{color:var(--acc)}
+.nav svg{width:19px;height:19px;flex:none}
+.side-bottom{margin-top:auto;display:flex;flex-direction:column;gap:3px}
+.addr-pill{margin:0 0 12px;padding:12px;border-radius:14px;background:var(--panel);border:1px solid var(--line);cursor:pointer;transition:.15s}
+.addr-pill:hover{border-color:var(--line2)}
+.addr-pill small{color:var(--faint);font-size:11px;font-weight:700;letter-spacing:.6px}
+.addr-pill div{font-family:var(--mono);font-size:12.5px;margin-top:3px;display:flex;justify-content:space-between}
+main{flex:1;overflow-y:auto;padding:0 0 40px;position:relative}
+.page{display:none;max-width:1248px;margin:0 auto;padding:0 34px;animation:fade .25s ease}
+.page.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:16px}
+.ph h1{font-size:24px;font-weight:700;letter-spacing:-.3px}
+.ph p{color:var(--muted);font-size:13px;margin-top:2px}
+
+/* ---- elemek ---- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.cap{font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--faint);text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:650;background:var(--panel2);border:1px solid var(--line);transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--line2);background:#1c2130}
+.btn svg{width:17px;height:17px}
+.btn.pri{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 78%,#000));border-color:transparent;color:#fff;box-shadow:0 6px 20px color-mix(in srgb,var(--acc) 25%,transparent)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.buy{background:var(--up);border-color:transparent;color:#04130a}
+.btn.buy:hover{filter:brightness(1.07)}
+.btn.sell{background:var(--down);border-color:transparent;color:#fff}
+.btn.sm{padding:7px 11px;font-size:12.5px;border-radius:10px}
+.btn.lg{padding:13px 20px;font-size:15px;border-radius:14px}
+.btn:disabled{opacity:.45;pointer-events:none}
+.icon-btn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+.icon-btn:hover{color:var(--text);border-color:var(--line2)}
+.icon-btn svg{width:18px;height:18px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.pill.up{background:var(--upSoft)}.pill.down{background:var(--downSoft)}.pill.flat{background:var(--panel2);color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.chip b{color:var(--text);font-weight:650}
+.field{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:0 12px;transition:.15s}
+.field:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px var(--accSoft)}
+.field input{flex:1;background:none;border:0;outline:0;padding:12px 0;min-width:0}
+.field .unit{color:var(--muted);font-weight:700;font-size:13px}
+.field svg{width:17px;height:17px;color:var(--faint)}
+.tabs{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.tabs button{padding:6px 12px;border-radius:9px;font-size:12.5px;font-weight:650;color:var(--muted)}
+.tabs button.on{background:var(--panel2);color:var(--text);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.tabs button:hover{color:var(--text)}
+.av{width:38px;height:38px;border-radius:50%;flex:none;object-fit:cover;background:var(--panel2);display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff;overflow:hidden}
+.av.lg{width:58px;height:58px;font-size:20px}.av.sm{width:28px;height:28px;font-size:11px}
+.err{color:var(--down);font-size:13px;min-height:18px}
+.skel{background:linear-gradient(90deg,var(--panel2),#1d2231,var(--panel2));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:8px}
+@keyframes sk{to{background-position:-200% 0}}
+.spin{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.empty{padding:34px;text-align:center;color:var(--muted)}
+
+/* ---- kezdőlap ---- */
+.hero{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:18px;margin-bottom:18px}
+.hero .bal{background:radial-gradient(120% 120% at 0% 0%,color-mix(in srgb,var(--acc) 25%,transparent),transparent 55%),radial-gradient(90% 90% at 100% 100%,color-mix(in srgb,var(--acc2) 16%,transparent),transparent 60%),var(--panel)}
+.total{font-size:40px;font-weight:750;letter-spacing:-1px;margin:8px 0 4px}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:22px}
+.act{display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 4px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:12.5px;font-weight:650;transition:.15s}
+.act:hover{background:rgba(255,255,255,.07);border-color:var(--line2)}
+.act i{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--accSoft);color:var(--acc)}
+.act.g i{background:var(--upSoft);color:var(--up)}
+.act svg{width:18px;height:18px}
+.chart-card{display:flex;flex-direction:column}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.chart-wrap{position:relative;flex:1;min-height:210px;margin-top:10px}
+.chart-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.chart-msg{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;padding:16px}
+.live-badge{position:absolute;top:2px;left:4px;display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.6px;color:#ff6b78;pointer-events:none}
+.live-badge i{width:8px;height:8px;border-radius:50%;background:#ff4757;box-shadow:0 0 0 0 rgba(255,71,87,.6);animation:pulse 1.6s infinite}
+.live-badge span{color:var(--faint);font-weight:600;letter-spacing:0}
+.ldot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff4757;margin-right:6px;vertical-align:middle;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,71,87,.55)}70%{box-shadow:0 0 0 8px rgba(255,71,87,0)}100%{box-shadow:0 0 0 0 rgba(255,71,87,0)}}
+.list .row{display:grid;grid-template-columns:minmax(200px,1.6fr) 1fr 1fr 1fr;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:.12s}
+.list .row:hover{background:var(--panel2)}
+.list .head{cursor:default;color:var(--faint);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding-top:2px;padding-bottom:6px}
+.list .head:hover{background:none}
+.tk{display:flex;align-items:center;gap:12px;min-width:0}
+.tk b{display:block;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.r{text-align:right}
+
+/* ---- piac ---- */
+.mk-bar{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.mk-bar .field{flex:1;min-width:260px}
+.mlist .row{grid-template-columns:34px minmax(200px,1.7fr) 1fr .8fr 1fr 1fr 1fr}
+.rank{color:var(--faint);font-weight:700;font-size:12.5px}
+
+/* ---- token oldal ---- */
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;margin-bottom:16px}
+.back:hover{color:var(--text)}.back svg{width:16px;height:16px}
+.th{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.th h1{font-size:24px;font-weight:750;display:flex;align-items:center;gap:10px}
+.th .sym{font-size:13px;color:var(--muted);font-weight:700;padding:3px 9px;border-radius:8px;background:var(--panel2)}
+.th .price{font-size:30px;font-weight:750;letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tgrid{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+.tgrid .chart-wrap{min-height:330px}
+.rug{margin-top:18px}
+.rug-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rug ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.rug li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px}
+.rug li i{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.badge{padding:4px 10px;border-radius:8px;font-size:11.5px;font-weight:800;letter-spacing:.5px}
+.lv0{background:var(--upSoft);color:var(--up)}.lv1{background:var(--warnSoft);color:var(--warn)}.lv2{background:var(--downSoft);color:var(--down)}
+.trade .tabs{display:flex;margin-bottom:16px}.trade .tabs button{flex:1;padding:9px}
+.trade .tabs button.on.b{background:var(--upSoft);color:var(--up)}
+.trade .tabs button.on.s{background:var(--downSoft);color:var(--down)}
+.presets{display:flex;gap:6px;margin:10px 0 16px}
+.presets button{flex:1;padding:7px 0;border-radius:9px;background:var(--panel2);border:1px solid var(--line);font-size:12.5px;font-weight:650;color:var(--muted)}
+.presets button:hover{color:var(--text);border-color:var(--line2)}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--muted)}
+.kv b{color:var(--text);font-weight:650}
+.links{display:flex;gap:8px;margin-left:auto}
+
+/* ---- felső sáv, kereső ---- */
+.topbar{position:sticky;top:0;z-index:20;display:flex;gap:14px;align-items:center;padding:14px 34px;background:rgba(7,8,12,.84);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);margin-bottom:26px}
+.gsearch{position:relative;flex:1;max-width:640px}
+.gres{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--panel);border:1px solid var(--line2);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.6);padding:8px;display:none;max-height:460px;overflow:auto}
+.gres.on{display:block;animation:fade .15s}
+.gres h6{font-size:11px;color:var(--faint);letter-spacing:.7px;text-transform:uppercase;padding:8px 10px 4px}
+.gres .it{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:11px;cursor:pointer}
+.gres .it:hover,.gres .it.sel{background:var(--panel2)}
+.gres .it .rt{margin-left:auto;text-align:right}
+.gres .note{padding:14px;color:var(--muted);font-size:13px}
+.me{display:flex;align-items:center;gap:9px;padding:5px 14px 5px 5px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:650;margin-left:auto}
+.me:hover{border-color:var(--line2)}
+/* ---- barátok ---- */
+.invite{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:radial-gradient(100% 160% at 0% 0%,color-mix(in srgb,var(--acc) 22%,transparent),transparent 60%),var(--panel)}
+.invite .code{font-family:var(--mono);font-size:13px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;word-break:break-all;user-select:text;flex:1;min-width:260px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:16px}
+.fcard{cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:14px}
+.fcard:hover{border-color:var(--line2);transform:translateY(-2px)}
+.fcard .tot{font-size:22px;font-weight:750}
+.stack-av{display:flex;align-items:center}.stack-av>*{margin-left:-9px;border:2px solid var(--panel)}.stack-av>*:first-child{margin-left:0}
+.whead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.whead h1{font-size:24px;font-weight:750}
+.wtot{font-size:36px;font-weight:750;letter-spacing:-.8px}
+/* ---- modál, toast ---- */
+.ov{position:fixed;inset:0;background:rgba(3,4,8,.66);backdrop-filter:blur(6px);display:none;place-items:center;z-index:50}
+.ov.on{display:grid;animation:fade .2s}
+.modal{width:min(480px,92vw);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line2);border-radius:22px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal h2{font-size:19px;font-weight:750;margin-bottom:4px}
+.modal .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.mrow{display:flex;gap:10px;margin-top:20px}.mrow .btn{flex:1}
+.big-amt{font-size:30px;font-weight:750;letter-spacing:-.5px}
+.box{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.warnbox{background:var(--downSoft);color:#ff9aa3;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:600}
+.okbox{background:var(--upSoft);color:#8ff0b3;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:600}
+.addr-big{font-family:var(--mono);font-size:14px;word-break:break-all;line-height:1.6;user-select:text}
+.steps{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.steps b{color:var(--text)}
+#toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:60}
+.toast{min-width:280px;max-width:420px;padding:13px 16px;border-radius:14px;background:var(--panel2);border:1px solid var(--line2);box-shadow:0 14px 40px rgba(0,0,0,.5);font-size:13.5px;font-weight:600;animation:fade .2s;cursor:default}
+.toast.ok{border-color:rgba(34,197,94,.45)}.toast.bad{border-color:rgba(240,68,82,.5)}
+.toast a{color:var(--acc);cursor:pointer;text-decoration:underline}
+
+/* ---- belépés ---- */
+#gate{position:fixed;inset:0;display:none;place-items:center;background:radial-gradient(60% 60% at 50% 0%,color-mix(in srgb,var(--acc) 18%,transparent),transparent 70%),var(--bg);z-index:40}
+#gate.on{display:grid}
+.gcard{width:min(440px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.gcard .logo{width:52px;height:52px;font-size:24px;border-radius:16px;margin-bottom:18px}
+.gcard h2{font-size:22px;font-weight:750}
+.gcard p{color:var(--muted);font-size:13.5px;margin:6px 0 18px}
+.gcard label{display:block;margin:12px 0 6px}
+.stack{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+@media (max-width:1100px){.hero{grid-template-columns:1fr}.tgrid{grid-template-columns:1fr}.mlist .row{grid-template-columns:28px minmax(180px,1.7fr) 1fr .8fr 1fr}.mlist .row>:nth-child(6),.mlist .row>:nth-child(7){display:none}}
+
+/* ---- beállítások ---- */
+.set-grid{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start}
+.set-nav{position:sticky;top:100px;display:flex;flex-direction:column;gap:2px}
+.set-nav button{padding:10px 12px;border-radius:10px;text-align:left;color:var(--muted);font-weight:600}
+.set-nav button:hover{color:var(--text);background:var(--panel)}
+.set-sec{margin-bottom:18px;scroll-margin-top:100px}
+.set-sec h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.set-row{display:grid;grid-template-columns:210px 1fr;gap:18px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
+.set-sec h3+.set-row{border-top:0}
+.set-row .lbl b{display:block;font-weight:650}.set-row .lbl small{color:var(--faint);font-size:12px}
+.set-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.set-ctl .field{flex:1;min-width:200px}
+.swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;box-shadow:inset 0 0 0 3px var(--panel);transition:.15s}
+.swatch:hover{transform:scale(1.08)}.swatch.on{border-color:var(--text)}
+.av.xl{width:84px;height:84px;font-size:30px}
+.switch{width:46px;height:26px;border-radius:999px;background:var(--panel2);border:1px solid var(--line2);position:relative;transition:.2s;flex:none}
+.switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.2s}
+.switch.on{background:var(--acc);border-color:transparent}.switch.on i{left:23px;background:#fff}
+.presets button.instant{color:#ffb3ba;border-color:rgba(240,68,82,.45);background:rgba(240,68,82,.08)}
+.presets button.instant:hover{background:rgba(240,68,82,.18);color:#fff}
+.hint{font-size:12px;color:var(--faint);margin-top:8px;line-height:1.5}
+.langsw{display:flex;justify-content:center;margin-top:18px}
+.empty a{color:var(--acc);cursor:pointer;font-weight:650}
+.me img.av,.me .av{width:28px;height:28px;font-size:12px}
+@media (max-width:1100px){.set-grid{grid-template-columns:1fr}.set-nav{display:none}.set-row{grid-template-columns:1fr}}
+
+/* ================= TELEFON ================= */
+.tabbar,.mlogo{display:none}
+#rowBtc,#nav [data-p="btc"]{display:none !important}  /* a Bitcoin-tárca csak gépen */
+@media (max-width: 760px){
+  html,body{overflow:hidden}
+  body{font-size:15px}
+  input,select,textarea{font-size:16px !important}
+  .sidebar{display:none}
+  #app{flex-direction:column}
+  main{padding:0 0 calc(86px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+  .page{padding:0 14px}
+  .topbar{padding:calc(10px + env(safe-area-inset-top)) 14px 10px;gap:10px;margin-bottom:14px}
+  .mlogo{display:grid;width:34px;height:34px;font-size:16px;border-radius:11px;flex:none}
+  .gsearch{max-width:none}
+  .gsearch .field input{padding:10px 0}
+  .me{padding:4px;margin-left:0}
+  .me #meName{display:none}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:rgba(12,14,20,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--faint);font-size:10.5px;font-weight:650}
+  .tabbar button svg{width:22px;height:22px}
+  .tabbar button.on{color:var(--text)}.tabbar button.on svg{color:var(--acc)}
+  .tabbar .tb-buy i{width:48px;height:48px;margin-top:-20px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 8px 22px color-mix(in srgb,var(--acc) 45%,transparent)}
+  .tabbar .tb-buy svg{width:24px;height:24px}
+  .ph{margin-bottom:14px}.ph h1{font-size:21px}.ph p{font-size:12.5px}
+  .card{padding:16px;border-radius:18px}
+  .hero{grid-template-columns:1fr;gap:12px;margin-bottom:12px}
+  .total{font-size:34px}
+  .actions{gap:6px;margin-top:16px}
+  .act{padding:10px 2px;font-size:11.5px}
+  .chart-wrap{min-height:220px}
+  .tgrid .chart-wrap{min-height:260px}
+  .chart-head{flex-wrap:wrap}
+  .tabs button{padding:6px 10px}
+  /* listák: kevesebb oszlop */
+  .list .row{grid-template-columns:minmax(0,1fr) auto auto;padding:11px 8px;gap:10px}
+  .list .row>:nth-child(3){display:none}
+  .list .head{display:none}
+  .mlist .row{grid-template-columns:minmax(0,1fr) auto auto}
+  .mlist .row>:nth-child(1),.mlist .row>:nth-child(5),.mlist .row>:nth-child(6),.mlist .row>:nth-child(7){display:none}
+  .mlist .row>:nth-child(3){display:block}
+  .mk-bar .field{min-width:0;width:100%}
+  .mk-bar .tabs{width:100%}.mk-bar .tabs button{flex:1}
+  /* coin oldal: grafikon, alatta vétel/eladás, aztán biztonság */
+  .th{gap:12px;flex-wrap:wrap}.th h1{font-size:19px}.th .price{font-size:24px}
+  .av.lg{width:48px;height:48px}
+  .links{margin-left:0;width:100%;flex-wrap:wrap}
+  .chips{gap:6px}.chip{font-size:11.5px;padding:5px 9px}
+  .tgrid{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+  .tgrid>*,.tgrid>div:first-child>*{width:auto;min-width:0}
+  .tgrid>div:first-child{display:contents}
+  .tgrid .chart-card{order:1}.tgrid .trade{order:2}.tgrid .rug{order:3;margin-top:0}
+  /* barátok, tárca */
+  .fgrid{grid-template-columns:1fr}
+  .invite .code{min-width:0;width:100%}
+  .whead h1{font-size:20px}.wtot{font-size:30px}
+  .whead .links{width:100%}
+  /* beállítások */
+  .set-grid{grid-template-columns:1fr}.set-nav{display:none}
+  .set-row{grid-template-columns:1fr;gap:10px}
+  /* ablakok: alulról felcsúszó lap */
+  .ov{align-items:end;place-items:end stretch}
+  .ov.on{display:flex;align-items:flex-end}
+  .modal{width:100%;max-width:none;max-height:92vh;border-radius:24px 24px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));animation:sheet .25s ease}
+  .modal::before{content:"";display:block;width:40px;height:4px;border-radius:4px;background:var(--line2);margin:-8px auto 14px}
+  .mrow{flex-direction:row}
+  #toasts{left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));top:auto}
+  .toast{min-width:0;max-width:none}
+  #gate{padding:0 12px}.gcard{padding:24px 20px}
+}
+@keyframes sheet{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+</style></head>
+<body>
+<div id="gate"><div class="gcard" id="gatecard"></div></div>
+
+<div id="app" style="display:none">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">K</div><div><b>Kesu Wallet</b><small data-t="brand_sub"></small></div></div>
+    <nav class="nav" id="nav">
+      <button data-p="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span data-t="nav_home"></span></button>
+      <button data-p="market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg><span data-t="nav_market"></span></button>
+      <button data-p="btc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h6a3 3 0 0 1 0 6H8zM8 12h7a3 3 0 0 1 0 6H8zM8 4v16M10 4V2M14 4V2M10 22v-2M14 22v-2"/></svg><span data-t="nav_btc"></span></button>
+      <button data-p="friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span data-t="nav_friends"></span></button>
+      <button data-a="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg><span data-t="nav_send"></span></button>
+      <button data-a="receive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14"/><path d="m6 11 6 6 6-6"/><path d="M4 21h16"/></svg><span data-t="nav_receive"></span></button>
+      <button data-a="buysol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg><span data-t="nav_buysol"></span></button>
+    </nav>
+    <div class="side-bottom">
+      <div class="addr-pill" id="addrPill"><small data-t="your_address"></small><div><span id="addrShort">…</span><span class="faint">⧉</span></div></div>
+      <div class="nav">
+        <button data-p="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-t="nav_settings"></span></button>
+        <button data-a="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span data-t="nav_lock"></span></button>
+        <button data-a="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg><span data-t="nav_logout"></span></button>
+      </div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div class="topbar"><div class="logo mlogo">K</div>
+      <div class="gsearch"><label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="gq" data-tp="search_ph" autocomplete="off" spellcheck="false"></label><div class="gres" id="gres"></div></div>
+      <button class="me" id="meChip"><span id="meAv"></span><span id="meName"></span></button>
+    </div>
+
+    <section class="page" id="p-home">
+      <div class="ph"><div><h1 data-t="home_title"></h1><p data-t="home_sub"></p></div>
+        <button class="icon-btn" id="refreshBtn" data-tt="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
+      <div class="hero">
+        <div class="card bal">
+          <div class="cap" data-t="total_balance"></div>
+          <div class="total num" id="total"><span class="skel" style="display:inline-block;width:180px;height:40px"></span></div>
+          <div style="display:flex;gap:10px;align-items:center"><span class="num muted" id="solAmt"></span><span id="chg"></span></div>
+          <div class="actions">
+            <button class="act g" data-a="buysol"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i><span data-t="act_buy"></span></button>
+            <button class="act" data-a="send"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></i><span data-t="act_send"></span></button>
+            <button class="act" data-a="receive"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17M16 17H7V8"/></svg></i><span data-t="act_receive"></span></button>
+            <button class="act" data-p="market"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M21 16l-4 4-4-4"/></svg></i><span data-t="act_trade"></span></button>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head">
+            <div><div class="tk"><img class="av sm" id="solLogo" alt="" onerror="this.style.visibility='hidden'"><div><b>Solana</b><small data-t="sol_price"></small></div></div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px"><span class="num" style="font-size:24px;font-weight:750" id="solPrice">–</span><span id="solChg"></span></div></div>
+            <div class="tabs" id="homeTf"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="homeChart"></canvas><div class="chart-msg" id="homeChartMsg"></div></div>
+        </div>
+      </div>
+      <div class="card" style="padding:12px"><div class="list" id="holdings"></div></div>
+    </section>
+
+    <section class="page" id="p-market">
+      <div class="ph"><div><h1 data-t="market_title"></h1><p data-t="market_sub"></p></div></div>
+      <div class="mk-bar">
+        <label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" data-tp="market_ph" autocomplete="off"></label>
+        <div class="tabs" id="mkTabs"><button data-k="popular" class="on" data-t="tab_popular"></button><button data-k="trending" data-t="tab_trending"></button><button data-k="new" data-t="tab_new"></button></div>
+      </div>
+      <div class="card" style="padding:12px"><div class="list mlist" id="mlist"></div></div>
+    </section>
+
+    <section class="page" id="p-btc">
+      <div class="ph"><div><h1 data-t="btc_title"></h1><p data-t="btc_sub"></p></div>
+        <button class="icon-btn" id="btcRefresh" data-tt="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
+      <div class="hero">
+        <div class="card bal">
+          <div class="cap" data-t="btc_balance"></div>
+          <div class="total num" id="btcTotal"><span class="skel" style="display:inline-block;width:180px;height:40px"></span></div>
+          <div style="display:flex;gap:10px;align-items:center"><span class="num muted" id="btcUsd"></span><span id="btcPend"></span></div>
+          <div class="actions">
+            <button class="act g" data-a="xswap"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M21 16l-4 4-4-4"/></svg></i><span data-t="xs_btn"></span></button>
+            <button class="act" data-a="btcsend"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></i><span data-t="act_send"></span></button>
+            <button class="act" data-a="btcrecv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17M16 17H7V8"/></svg></i><span data-t="act_receive"></span></button>
+            <button class="act" data-a="btcexp"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></i><span data-t="btc_explorer"></span></button>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head">
+            <div><div class="tk"><div class="av sm" style="background:#f7931a">₿</div><div><b>Bitcoin</b><small data-t="btc_price"></small></div></div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px"><span class="num" style="font-size:24px;font-weight:750" id="btcPrice">–</span></div></div>
+            <div class="tabs" id="btcTf"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="btcChart"></canvas><div class="chart-msg" id="btcChartMsg"></div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:18px"><div class="cap" data-t="btc_addr"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap"><div class="box addr-big" id="btcAddr" style="flex:1;min-width:260px;user-select:text">…</div><button class="btn" id="btcCopy" data-t="copy_addr"></button></div>
+        <div class="faint" style="font-size:12px;margin-top:8px" data-t="btc_recv_warn"></div></div>
+      <div class="card" id="xsCard" style="padding:12px;margin-bottom:18px;display:none"><h3 style="margin:6px 8px 10px" data-t="xs_list"></h3><div class="list" id="xsList"></div></div>
+      <div class="card" style="padding:12px"><h3 style="margin:6px 8px 10px" data-t="btc_txs"></h3><div class="list" id="btcTxs"></div></div>
+    </section>
+
+    <section class="page" id="p-friends">
+      <div class="ph"><div><h1 data-t="friends_title"></h1><p data-t="friends_sub"></p></div><button class="btn pri" id="addFriendBtn" data-t="add_friend_btn"></button></div>
+      <div class="card invite" id="inviteCard"></div>
+      <div class="fgrid" id="flist"></div>
+    </section>
+
+    <section class="page" id="p-wallet">
+      <button class="back" id="wBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg><span data-t="back"></span></button>
+      <div id="walletBody"></div>
+    </section>
+
+    <section class="page" id="p-token">
+      <button class="back" id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg><span data-t="back"></span></button>
+      <div id="tokenBody"></div>
+    </section>
+
+    <section class="page" id="p-settings">
+      <div class="ph"><div><h1 data-t="settings_title"></h1><p data-t="settings_sub"></p></div></div>
+      <div class="set-grid">
+        <div class="set-nav" id="setNav">
+          <button data-s="sProfile" data-t="sec_profile"></button><button data-s="sLook" data-t="sec_look"></button>
+          <button data-s="sSec" data-t="sec_security"></button><button data-s="sTrade" data-t="sec_trading"></button><button data-s="sAbout" data-t="sec_about"></button>
+        </div>
+        <div id="setBody"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabbar" id="tabbar">
+  <button data-p="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span data-t="nav_home"></span></button>
+  <button data-p="market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg><span data-t="nav_market"></span></button>
+  <button data-a="buysol" class="tb-buy"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i></button>
+  <button data-p="friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span data-t="nav_friends"></span></button>
+  <button data-p="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span data-t="nav_settings"></span></button>
+</nav>
+<div class="ov" id="ov"><div class="modal" id="modal"></div></div>
+<div id="toasts"></div>
+<input type="file" id="avFile" accept="image/png,image/jpeg,image/webp" style="display:none">
+
+<script src="core.js"></script>
+<script src="backend.js"></script>
+<script>
+"use strict";
+// =============== nyelvek ===============
+const L = {
+en: {
+ acc_reg_t:"Create your Kesu account", acc_reg_p:"Register with your email, a username and a password. We'll email you a 6-digit code to confirm.", acc_login_t:"Log in", acc_login_p:"Log in to your Kesu account.",
+ acc_reg:"Register", acc_login:"Log in", acc_un_hint:"3–20 characters: lowercase letters, numbers or _. One account = one username = one wallet. The username can't be changed later.",
+ acc_reg_go:"Register", acc_login_go:"Log in", acc_code_t:"Check your email", acc_code_p:"We sent a 6-digit code to <b>{e}</b>. Enter it below.", acc_code_hint:"Can't find it? Check your spam folder. The code is valid for 1 hour.",
+ acc_resend:"Send new code", acc_resend_wait:"New code in {n}s", acc_resent:"✓ New code sent", acc_verify:"Verify",
+ acc_none:"Not registered yet", acc_open:"Register / Log in", acc_logout:"Log out of account",
+ acc_server:"Account server", acc_server_d:"Supabase project URL and public (anon) key – see SZERVER_BEALLITAS.txt", acc_not_conf:"The account server isn't set up yet. Add it in Settings → Account server.",
+ acc_logged_out:"Logged out of your account", acc_email_d:"Your account's email address",
+ xs_btn:"Swap", xs_t:"Swap Bitcoin", xs_sub:"Trade real BTC for Solana coins, or SOL for BTC. Powered by NEAR Intents.", xs_btc2sol:"BTC → coin", xs_sol2btc:"SOL → BTC",
+ xs_pay:"You pay", xs_get:"You receive", xs_quote:"Get quote", xs_go:"Swap now", xs_min:"Minimum (1% slippage)", xs_time:"Estimated time", xs_minutes:"~{n} min",
+ xs_service:"Service fee", xs_service_v:"0.25% (NEAR Intents)", xs_netfee:"Network fee", xs_other:"Want another coin? Swap to SOL, then trade it in the Market.",
+ xs_warn:"Bitcoin needs network confirmations, so the swap usually takes 10–40 minutes. The coins arrive in your Solana wallet automatically. If the swap fails, the money is returned to your wallet.",
+ xs_warn2:"The swap usually takes a few minutes. The BTC arrives at your Bitcoin address. If the swap fails, the SOL is returned to your wallet.",
+ xs_started:"✓ Swap started – you'll see its progress on the Bitcoin page", xs_list:"Swaps", xs_done:"✓ Swap complete: {v}",
+ xs_PENDING_DEPOSIT:"Waiting for deposit", xs_KNOWN_DEPOSIT_TX:"Deposit seen", xs_PROCESSING:"Swapping", xs_SUCCESS:"Done", xs_REFUNDED:"Refunded", xs_FAILED:"Failed", xs_INCOMPLETE_DEPOSIT:"Deposit too small",
+ xs_redo:"The offer changed – check the new numbers.",
+ nav_btc:"Bitcoin", nav_logout:"Log out", btc_title:"Bitcoin", btc_sub:"Your own Bitcoin wallet – a real bc1… address on the Bitcoin network",
+ btc_balance:"Bitcoin balance", btc_price:"Bitcoin price", btc_pending:"+{v} BTC pending", btc_pending_out:"{v} BTC pending", btc_explorer:"Explorer", btc_addr:"YOUR BITCOIN ADDRESS",
+ btc_recv_warn:"Only send Bitcoin (BTC on the Bitcoin network) here. Never send SOL or Solana tokens to this address, and never send BTC to your Solana address – it would be lost.",
+ btc_txs:"Transactions", btc_notx:"No transactions yet. Send BTC to your address above to get started.", btc_unconf:"Pending", btc_conf:"Confirmed", btc_in:"Received", btc_out:"Sent",
+ btc_err:"Couldn't load your Bitcoin wallet.", btc_recv_t:"Receive Bitcoin", btc_recv_p:"Send BTC to this address from an exchange or another Bitcoin wallet.",
+ btc_send_t:"Send Bitcoin", btc_avail:"Available: {v} BTC", btc_fee:"Network fee", fee_fast:"Fast", fee_normal:"Normal", fee_slow:"Slow",
+ btc_rates:"Fast {f} · Normal {n} · Slow {s} sat/vB – a faster fee confirms sooner (fast ≈ 10 min, slow ≈ 1 hour)",
+ btc_confirm:"Confirm Bitcoin transfer", btc_fee_l:"Network fee", btc_total:"Total leaving your wallet", btc_fee_high:"The network fee is more than 10% of the amount you're sending.",
+ btc_self:"This is your own Bitcoin address.", btc_sent:"✓ Bitcoin sent – confirmation usually takes 10–60 minutes", btc_max_note:"The whole balance minus the network fee will be sent.",
+ s_btc:"Backup Bitcoin key", s_btc_d:"Show the Bitcoin private key (WIF), e.g. to import it in Electrum or Sparrow", btc_key_t:"Bitcoin private key",
+ btc_key_note:"In Electrum: import as p2wpkh:&lt;key&gt;. Your Solana secret key backup also restores this Bitcoin wallet in Kesu Wallet.",
+ s_logout:"Log out", s_logout_d:"Remove this wallet from this computer. You can log back in any time with your secret key.",
+ logout_t:"Log out", logout_p:"Your wallet will be removed from this computer. To log back in, you'll need your secret key (it also restores your Bitcoin). Without it, your coins are lost forever.",
+ logout_saved:"I've saved my secret key", logout_go:"Log out", logged_out:"You're logged out. An encrypted copy was kept in the data folder (logged_out).",
+ brand_sub:"Solana wallet", nav_home:"Portfolio", nav_market:"Market", nav_friends:"Friends", nav_send:"Send", nav_receive:"Receive", nav_buysol:"Buy SOL",
+ nav_settings:"Settings", nav_lock:"Lock", your_address:"YOUR ADDRESS", search_ph:"Search coins, @friends, wallet addresses or name.sol", refresh:"Refresh",
+ home_title:"Portfolio", home_sub:"Your balance and tokens", total_balance:"Total balance", act_buy:"Buy", act_send:"Send", act_receive:"Receive", act_trade:"Trade",
+ sol_price:"SOL price", market_title:"Market", market_sub:"Solana coins · click a coin for its chart and to trade", market_ph:"Search by name, or paste a token address (CA)…",
+ tab_popular:"Popular", tab_trending:"Trending", tab_new:"New", friends_title:"Friends", friends_sub:"See what your friends are invested in", add_friend_btn:"+ Add friend",
+ back:"Back", settings_title:"Settings", settings_sub:"Profile, appearance, security and trading", sec_profile:"Profile", sec_look:"Appearance", sec_security:"Security",
+ sec_trading:"Trading", sec_about:"About", copied:"Copied", addr_copied:"Address copied", copy_fail:"Couldn't copy.", see:"View",
+ chart_loading:"Loading chart…", chart_nodata:"Not enough data for a chart.", h_asset:"Asset", h_price:"Price", h_amount:"Amount", h_value:"Value",
+ h_coin:"Coin", h_24h:"24h", h_vol:"Volume 24h", h_age:"Age", h_mcap:"Market cap", h_liq:"Liquidity", no_results:"No results.",
+ empty_own:"You don't have other tokens yet. Take a look at the <a data-p='market'>Market</a>!", empty_other:"This wallet only holds SOL right now.",
+ refreshed:"Refreshed", arrived:"✓ Received: +{v} SOL", min:"min", hour:"h", day:"days",
+ welcome_t:"Welcome to Kesu Wallet!", welcome_p:"Your own Solana wallet: buy, sell and send coins. The secret key stays on this computer, encrypted with your password.",
+ create_wallet:"Create a new wallet", import_wallet:"Import an existing wallet", pw_label:"Password (min. 8 characters)", pw_again:"Repeat password",
+ pw_short:"The password must be at least 8 characters.", pw_mismatch:"The passwords don't match.", new_wallet:"New wallet",
+ new_wallet_p:"You'll open the wallet with this password. If you forget it, you can only restore the wallet with the backup key.", back_btn:"Back", create:"Create",
+ import_t:"Import wallet", import_p:"Paste your own wallet's secret key (Phantom: Settings → Account → Show private key).", secret_key:"Secret key", import:"Import",
+ sec_warn:"● Anyone who knows this key can take all your money.<br>● Never send it to anyone or type it into a website.<br>● If you lose it and forget your password, the money is gone.",
+ show:"Show", hide:"Hide", copy:"Copy", secret_copied:"Secret key copied – save it, then clear your clipboard!", backup_t:"Backup",
+ backup_p:"Write it down or store it somewhere safe. With it you can always restore your wallet, even in Phantom.", saved_it:"I saved my secret key",
+ to_wallet:"Go to my wallet", unlock_t:"Unlock wallet", password:"Password", unlock:"Unlock",
+ rug0:"LOW RUG RISK", rug1:"MEDIUM RUG RISK", rug2:"HIGH RUG RISK", website:"Website", mcap:"Market cap", liq:"Liquidity", vol24:"Volume 24h", age:"Age",
+ ca_copied:"Token address copied", price_chart:"Price", safety:"Safety check", no_rug:"No known rug signals found. That doesn't mean it's safe.",
+ sol_card:"You buy SOL with your bank card, and use it to buy every other coin.", you_have:"You have", buy_sol_card:"Buy SOL with card", send_sol:"Send SOL",
+ buy:"Buy", sell:"Sell", amount:"Amount", available:"Available", est_value:"Estimated value", buy_x:"Buy {s}", worth:"Worth", how_much_sell:"How much do you sell?",
+ no_token:"You don't hold this token.", confirm_buy:"Confirm purchase", confirm_sell:"Confirm sale", you_pay:"You pay", you_get:"You get approx.",
+ impact:"Price impact", slippage:"Max. slippage", fees:"Network fees", sponsored:" (sponsored)",
+ impact_warn:"High price impact: your order moves the price itself, so you get a much worse price.",
+ rug_type:"HIGH RUG RISK. You could easily lose the whole amount. If you still want to buy, type: YES", confirm_word:"YES",
+ quote_left:"Quote valid for {n} more seconds.", quote_expired:"The quote expired. Close and get a new one.", cancel:"Cancel",
+ bought:"✓ Purchase successful: {s}", sold:"✓ Sale successful: {s}", receive_t:"Receive", receive_p:"Anyone can send SOL or Solana tokens to this address.",
+ receive_warn:"Only send on the Solana network! Money sent from other networks (e.g. Ethereum) can be lost.", close:"Close", copy_addr:"Copy address",
+ buysol_t:"Buy SOL with a bank card", buysol_sub:"Visa, Mastercard, Apple Pay, Google Pay · via MoonPay",
+ bs1:"Press the button: the payment window opens and your address is copied.", bs2:"Enter the amount and paste the address into the “wallet address” field (Ctrl+V).",
+ bs3:"Check that the start and end of the address match: <b class='mono'>{a}</b>", bs4:"Enter your card and pay. The SOL arrives here in a few minutes.",
+ bs_note:"Payments are processed by MoonPay (a licensed provider); the app never sees your card details. MoonPay sets the minimum amount and fee and shows them before you pay. 18+ only.",
+ pay_card:"Pay with card", moonpay_opened:"The payment window opened. Your address is on the clipboard.", send_t:"Send SOL", avail_x:"Available: {v} SOL",
+ recipient:"Recipient Solana address", paste:"Paste", fee_note:"Network fee: about 0.000005 SOL", next:"Next", kept_fee:"0.003 SOL kept for your token sale fees.",
+ paste_ctrlv:"Paste with Ctrl+V.", confirm_send:"Confirm transfer", recipient_l:"Recipient", check_ends:"Check the start and the end: ",
+ send_warn:"Transfers can't be reversed. If you send to the wrong address, the money is lost.", new_addr_warn:"This address has never received SOL. Are you sure you copied it right?",
+ send:"Send", sent:"✓ Sent: {v} SOL → {a}", sent_pending:"Sent, but not confirmed yet. Check before sending again!",
+ apikey_t:"Jupiter API key", apikey_p:"Buying coins needs a free Jupiter API key.", ak1:"Open the Jupiter developer portal and sign up (free).", ak2:"Create an API key and paste it here.",
+ open_portal:"Open portal ↗", save:"Save", saved:"✓ Saved", backup_pw_p:"Enter your password to show the secret key.", your_secret:"Your wallet's secret key", done:"Done",
+ acc_create_t:"Create your account", username:"Username", un_p:"This is your name in Kesu Wallet and goes into your invite code, so friends can add you.", un_hint:"3–20 characters: lowercase letters, numbers or _. One wallet = one username: it's reserved on the Solana blockchain (fee ≈ 0.000005 SOL), nobody else can take it, and it can't be changed later.", un_reserve:"Reserve name", un_later:"Later", un_reg:"✓ Registered – can't be changed", un_unreg:"Not reserved yet", un_wait:"Reserving on the blockchain… (up to a minute)", un_tip:"Friends can now add you just by typing @{u}",
+ welcome_user:"✓ Welcome, @{u}!", create_account:"Create account", invite_code:"Your invite code",
+ invite_p:"Send it to a friend so they can add you. Solana wallets are public: anyone with your address can see what's in it.",
+ no_username:"You don't have a username yet", no_username_p:"Create an @name so your friends can add you.",
+ no_friends:"No friends yet. Ask a friend for their invite code and add them with <b>+ Add friend</b>!", wallet_value:"Wallet value", coins_n:"{n} coins",
+ add_friend_t:"Add friend", add_friend_p:"Enter your friend's invite code, wallet address or .sol name.", af_l1:"Invite code, address or name.sol",
+ af_l2:"Name (optional with an invite code)", add:"Add", friend_added:"✓ @{n} added to your friends", wallet_lbl:"Wallet", remove:"Remove",
+ add_as_friend:"+ Add as friend", removed:"@{n} removed", public_note:"This is public data from the Solana network. Click a coin to see its chart.",
+ friends_h:"Friends", coins_h:"Coins", wallet_h:"Wallet", view_wallet:"View wallet", view_arrow:"View →", searching:"Searching…",
+ no_friend_named:"No friend with that name. Add friends with their invite code.",
+ s_avatar:"Profile picture", s_avatar_d:"JPG, PNG or WebP", upload:"Upload photo", remove_photo:"Remove", s_username_d:"Shown to friends in your invite code",
+ s_email:"Email", s_email_d:"Optional",
+ s_email_note:"Saved only on this computer. Kesu Wallet has no server, so it can't send you emails or recover your wallet by email – only your secret key can.",
+ s_lang:"Language", s_lang_d:"App language", s_accent:"Accent colour", s_accent_d:"Buttons and highlights",
+ s_pw:"Change password", s_pw_d:"Used to unlock this wallet", cur_pw:"Current password", new_pw:"New password", new_pw2:"Repeat new password", change:"Change",
+ pw_changed:"✓ Password changed", s_autolock:"Auto-lock", s_autolock_d:"Lock after inactivity", off:"Off", minutes:"{n} min",
+ s_backup:"Backup secret key", s_backup_d:"Show your wallet's secret key", show_key:"Show key", s_lock:"Lock now", s_lock_d:"Lock the wallet immediately",
+ s_jup:"Jupiter API key", s_jup_d:"Needed for buying and selling", s_rpc:"Solana RPC", s_rpc_d:"Optional, empty = public", rpc_ph:"empty = public",
+ s_defbuy:"Default buy amount", s_defbuy_d:"Pre-filled on the buy panel", s_version:"Version", s_data:"Data folder", s_data_d:"Your encrypted wallet and settings",
+ avatar_big:"This image can't be used. Try a smaller JPG or PNG.", locked_auto:"Locked after inactivity", retry:"Try again", trades_n:"{n} trades", live:"LIVE", live_note:"1-second candles · scroll to zoom", live_err:"Live price isn't available right now.", bs5m:"buys / sells (5m)", on:"On",
+ s_instant:"Instant sell", s_instant_d:"Sell buttons sell at once, without confirmation", s_maximp:"Instant sell price-impact limit", s_maximp_d:"Stop the sale if the price impact is higher",
+ instant_on_note:"⚡ Instant sell is on: one click sells immediately (stops above {m}% price impact).", sold_inst:"✓ Sold {p}% {s} → {v} SOL",
+},
+hu: {
+ acc_reg_t:"Hozd létre a Kesu fiókod", acc_reg_p:"Regisztrálj az e-mail címeddel, egy felhasználónévvel és jelszóval. E-mailben küldünk egy 6 jegyű kódot a megerősítéshez.", acc_login_t:"Belépés", acc_login_p:"Lépj be a Kesu fiókodba.",
+ acc_reg:"Regisztráció", acc_login:"Belépés", acc_un_hint:"3–20 karakter: kisbetű, szám vagy _. Egy fiók = egy felhasználónév = egy tárca. A felhasználónév később nem változtatható.",
+ acc_reg_go:"Regisztráció", acc_login_go:"Belépés", acc_code_t:"Nézd meg az e-mailjeidet", acc_code_p:"Küldtünk egy 6 jegyű kódot ide: <b>{e}</b>. Írd be lent.", acc_code_hint:"Nem találod? Nézd meg a spam mappát is. A kód 1 óráig érvényes.",
+ acc_resend:"Új kód küldése", acc_resend_wait:"Új kód {n} mp múlva", acc_resent:"✓ Új kódot küldtünk", acc_verify:"Megerősítés",
+ acc_none:"Még nincs regisztrálva", acc_open:"Regisztráció / Belépés", acc_logout:"Kilépés a fiókból",
+ acc_server:"Fiók-szerver", acc_server_d:"A Supabase projekt címe és nyilvános (anon) kulcsa – lásd SZERVER_BEALLITAS.txt", acc_not_conf:"A fiók-szerver még nincs beállítva. Add meg: Beállítások → Fiók-szerver.",
+ acc_logged_out:"Kiléptél a fiókodból", acc_email_d:"A fiókod e-mail címe",
+ xs_btn:"Csere", xs_t:"Bitcoin csere", xs_sub:"Valódi BTC-t cserélhetsz Solana coinokra, vagy SOL-t BTC-re. A NEAR Intents végzi.", xs_btc2sol:"BTC → coin", xs_sol2btc:"SOL → BTC",
+ xs_pay:"Fizetsz", xs_get:"Kapsz", xs_quote:"Ajánlat kérése", xs_go:"Csere most", xs_min:"Legalább (1% csúszás)", xs_time:"Várható idő", xs_minutes:"~{n} perc",
+ xs_service:"Szolgáltatási díj", xs_service_v:"0,25% (NEAR Intents)", xs_netfee:"Hálózati díj", xs_other:"Más coin kell? Cserélj SOL-ra, aztán a Piacon vedd meg.",
+ xs_warn:"A Bitcoinnak hálózati megerősítés kell, ezért a csere általában 10–40 perc. A coinok automatikusan megérkeznek a Solana-tárcádba. Ha a csere nem sikerül, a pénz visszajön a tárcádba.",
+ xs_warn2:"A csere általában pár perc. A BTC a Bitcoin címedre érkezik. Ha a csere nem sikerül, a SOL visszajön a tárcádba.",
+ xs_started:"✓ A csere elindult – az állapotát a Bitcoin oldalon látod", xs_list:"Cserék", xs_done:"✓ Csere kész: {v}",
+ xs_PENDING_DEPOSIT:"Befizetésre vár", xs_KNOWN_DEPOSIT_TX:"Befizetés látszik", xs_PROCESSING:"Csere folyamatban", xs_SUCCESS:"Kész", xs_REFUNDED:"Visszautalva", xs_FAILED:"Sikertelen", xs_INCOMPLETE_DEPOSIT:"Túl kevés befizetés",
+ xs_redo:"Az ajánlat változott – nézd meg az új számokat.",
+ nav_btc:"Bitcoin", nav_logout:"Kijelentkezés", btc_title:"Bitcoin", btc_sub:"Saját Bitcoin-tárcád – valódi bc1… cím a Bitcoin-hálózaton",
+ btc_balance:"Bitcoin egyenleg", btc_price:"Bitcoin árfolyam", btc_pending:"+{v} BTC függőben", btc_pending_out:"{v} BTC függőben", btc_explorer:"Böngésző", btc_addr:"A TE BITCOIN CÍMED",
+ btc_recv_warn:"Ide csak Bitcoint küldj (BTC a Bitcoin-hálózaton). Erre a címre soha ne küldj SOL-t vagy Solana tokent, és a Solana címedre se küldj BTC-t – elveszne.",
+ btc_txs:"Tranzakciók", btc_notx:"Még nincs tranzakció. Küldj BTC-t a fenti címedre a kezdéshez.", btc_unconf:"Függőben", btc_conf:"Megerősítve", btc_in:"Beérkezett", btc_out:"Elküldve",
+ btc_err:"Nem sikerült betölteni a Bitcoin-tárcát.", btc_recv_t:"Bitcoin fogadása", btc_recv_p:"Erre a címre küldj BTC-t tőzsdéről vagy másik Bitcoin-tárcából.",
+ btc_send_t:"Bitcoin küldése", btc_avail:"Elérhető: {v} BTC", btc_fee:"Hálózati díj", fee_fast:"Gyors", fee_normal:"Normál", fee_slow:"Lassú",
+ btc_rates:"Gyors {f} · Normál {n} · Lassú {s} sat/vB – gyorsabb díjjal hamarabb megerősítik (gyors ≈ 10 perc, lassú ≈ 1 óra)",
+ btc_confirm:"Bitcoin küldés megerősítése", btc_fee_l:"Hálózati díj", btc_total:"Összesen kimegy a tárcából", btc_fee_high:"A hálózati díj több, mint a küldött összeg 10%-a.",
+ btc_self:"Ez a saját Bitcoin címed.", btc_sent:"✓ Bitcoin elküldve – a megerősítés általában 10–60 perc", btc_max_note:"A teljes egyenleg megy el, a hálózati díj levonásával.",
+ s_btc:"Bitcoin kulcs mentése", s_btc_d:"A Bitcoin privát kulcs (WIF) megjelenítése, pl. Electrumba vagy Sparrow-ba importáláshoz", btc_key_t:"Bitcoin privát kulcs",
+ btc_key_note:"Electrumban így importáld: p2wpkh:&lt;kulcs&gt;. A Solana titkos kulcsod mentése a Kesu Walletben ezt a Bitcoin-tárcát is visszaállítja.",
+ s_logout:"Kijelentkezés", s_logout_d:"A tárca eltávolítása erről a gépről. A titkos kulcsoddal bármikor visszaléphetsz.",
+ logout_t:"Kijelentkezés", logout_p:"A tárcád lekerül erről a gépről. A visszalépéshez kell a titkos kulcsod (ez a Bitcoint is visszaállítja). Nélküle a coinjaid örökre elvesznek.",
+ logout_saved:"Elmentettem a titkos kulcsomat", logout_go:"Kijelentkezés", logged_out:"Kijelentkeztél. Egy titkosított másolat megmaradt az adatmappában (logged_out).",
+ brand_sub:"Solana tárca", nav_home:"Portfólió", nav_market:"Piac", nav_friends:"Barátok", nav_send:"Küldés", nav_receive:"Fogadás", nav_buysol:"SOL vásárlás",
+ nav_settings:"Beállítások", nav_lock:"Zárolás", your_address:"A TE CÍMED", search_ph:"Keresés: coin, @barát, tárcacím vagy név.sol", refresh:"Frissítés",
+ home_title:"Portfólió", home_sub:"Az egyenleged és a tokenjeid", total_balance:"Teljes egyenleg", act_buy:"Vásárlás", act_send:"Küldés", act_receive:"Fogadás", act_trade:"Kereskedés",
+ sol_price:"SOL árfolyam", market_title:"Piac", market_sub:"Solana coinok · kattints egy coinra a grafikonhoz és a vásárláshoz", market_ph:"Keresés név alapján, vagy illeszd be a token címét (CA)…",
+ tab_popular:"Népszerű", tab_trending:"Felkapott", tab_new:"Új", friends_title:"Barátok", friends_sub:"Nézd meg, mibe fektettek a barátaid", add_friend_btn:"+ Barát hozzáadása",
+ back:"Vissza", settings_title:"Beállítások", settings_sub:"Profil, megjelenés, biztonság és kereskedés", sec_profile:"Profil", sec_look:"Megjelenés", sec_security:"Biztonság",
+ sec_trading:"Kereskedés", sec_about:"Névjegy", copied:"Másolva", addr_copied:"Cím másolva", copy_fail:"Nem sikerült másolni.", see:"Megnézem",
+ chart_loading:"Grafikon betöltése…", chart_nodata:"Nincs elég adat a grafikonhoz.", h_asset:"Eszköz", h_price:"Ár", h_amount:"Mennyiség", h_value:"Érték",
+ h_coin:"Coin", h_24h:"24ó", h_vol:"Forgalom 24ó", h_age:"Kor", h_mcap:"Piaci érték", h_liq:"Likviditás", no_results:"Nincs találat.",
+ empty_own:"Még nincs más tokened. Nézz szét a <a data-p='market'>Piacon</a>!", empty_other:"Ebben a tárcában most csak SOL van.",
+ refreshed:"Frissítve", arrived:"✓ Megérkezett: +{v} SOL", min:"perc", hour:"óra", day:"nap",
+ welcome_t:"Üdv a Kesu Walletben!", welcome_p:"Saját Solana tárca: coinok vásárlása, eladása és küldése. A titkos kulcs csak ezen a gépen van, jelszóval titkosítva.",
+ create_wallet:"Új tárca létrehozása", import_wallet:"Meglévő tárca importálása", pw_label:"Jelszó (min. 8 karakter)", pw_again:"Jelszó újra",
+ pw_short:"A jelszó legyen legalább 8 karakter.", pw_mismatch:"A két jelszó nem egyezik.", new_wallet:"Új tárca",
+ new_wallet_p:"Ezzel a jelszóval nyitod meg a tárcát. Ha elfelejted, csak a biztonsági mentéssel tudod visszaállítani.", back_btn:"Vissza", create:"Létrehozás",
+ import_t:"Tárca importálása", import_p:"Illeszd be a saját tárcád titkos kulcsát (Phantom: Beállítások → Fiók → Privát kulcs).", secret_key:"Titkos kulcs", import:"Importálás",
+ sec_warn:"● Aki ismeri ezt a kulcsot, elviheti az összes pénzedet.<br>● Soha senkinek ne küldd el, és ne írd be weboldalakra.<br>● Ha elveszíted, és a jelszót is elfelejted, a pénz elveszik.",
+ show:"Megjelenítés", hide:"Elrejtés", copy:"Másolás", secret_copied:"Titkos kulcs másolva – mentsd el, majd töröld a vágólapról!", backup_t:"Biztonsági mentés",
+ backup_p:"Írd le papírra vagy mentsd el biztonságos helyre. Ezzel bármikor visszaállíthatod a tárcát, akár Phantomban is.", saved_it:"Elmentettem a titkos kulcsot",
+ to_wallet:"Tovább a tárcához", unlock_t:"Tárca feloldása", password:"Jelszó", unlock:"Feloldás",
+ rug0:"ALACSONY RUG-KOCKÁZAT", rug1:"KÖZEPES RUG-KOCKÁZAT", rug2:"MAGAS RUG-KOCKÁZAT", website:"Weboldal", mcap:"Piaci érték", liq:"Likviditás", vol24:"Forgalom 24ó", age:"Kor",
+ ca_copied:"Token címe másolva", price_chart:"Árfolyam", safety:"Biztonsági ellenőrzés", no_rug:"Nem találtam ismert rug-jelet. Ez nem jelenti azt, hogy biztonságos.",
+ sol_card:"SOL-t bankkártyával veszel, és ezzel vásárolsz minden más coint.", you_have:"Neked van", buy_sol_card:"SOL vásárlás kártyával", send_sol:"SOL küldése",
+ buy:"Vétel", sell:"Eladás", amount:"Összeg", available:"Elérhető", est_value:"Becsült érték", buy_x:"{s} vásárlása", worth:"Értéke", how_much_sell:"Mennyit adsz el?",
+ no_token:"Ebből a tokenből nincs a tárcádban.", confirm_buy:"Vásárlás megerősítése", confirm_sell:"Eladás megerősítése", you_pay:"Fizetsz", you_get:"Kapsz kb.",
+ impact:"Ár-hatás", slippage:"Max. csúszás", fees:"Hálózati díjak", sponsored:" (átvállalva)",
+ impact_warn:"Nagy az ár-hatás: a megbízásod maga mozgatja az árat, sokkal rosszabb áron kötsz.",
+ rug_type:"MAGAS RUG-KOCKÁZAT. Könnyen elveszítheted a teljes összeget. Ha így is megveszed, írd be: IGEN", confirm_word:"IGEN",
+ quote_left:"Az ajánlat még {n} mp-ig érvényes.", quote_expired:"Az ajánlat lejárt. Zárd be, és kérj újat.", cancel:"Mégse",
+ bought:"✓ Sikeres vásárlás: {s}", sold:"✓ Sikeres eladás: {s}", receive_t:"Fogadás", receive_p:"Erre a címre bárki küldhet SOL-t vagy Solana tokent.",
+ receive_warn:"Csak Solana hálózaton küldj ide! Más hálózatról (pl. Ethereum) küldött pénz elveszhet.", close:"Bezárás", copy_addr:"Cím másolása",
+ buysol_t:"SOL vásárlás bankkártyával", buysol_sub:"Visa, Mastercard, Apple Pay, Google Pay · a MoonPay-en keresztül",
+ bs1:"Nyomd meg a gombot: megnyílik a fizetőablak, a címed a vágólapra kerül.", bs2:"Add meg az összeget, és a „wallet address” mezőbe illeszd be a címet (Ctrl+V).",
+ bs3:"Ellenőrizd, hogy a cím eleje és vége egyezik: <b class='mono'>{a}</b>", bs4:"Írd be a kártyát és fizess. Pár perc múlva itt lesz a SOL.",
+ bs_note:"A fizetést a MoonPay (engedéllyel rendelkező szolgáltató) dolgozza fel; a kártyaadataidat az app nem látja. A minimális összeget és a díjat a MoonPay szabja meg, fizetés előtt mutatja. 18 év felett vehető igénybe.",
+ pay_card:"Fizetés kártyával", moonpay_opened:"Megnyílt a fizetőablak. A cím a vágólapon van.", send_t:"SOL küldése", avail_x:"Elérhető: {v} SOL",
+ recipient:"Címzett Solana címe", paste:"Beillesztés", fee_note:"Hálózati díj: kb. 0,000005 SOL", next:"Tovább", kept_fee:"0,003 SOL-t meghagytam a tokenjeid eladásának díjára.",
+ paste_ctrlv:"Illeszd be Ctrl+V-vel.", confirm_send:"Küldés megerősítése", recipient_l:"Címzett", check_ends:"Ellenőrizd az elejét és a végét: ",
+ send_warn:"Az utalás nem vonható vissza. Ha rossz címre küldöd, a pénz elveszik.", new_addr_warn:"Ez a cím még soha nem kapott SOL-t. Biztosan jól másoltad?",
+ send:"Küldés", sent:"✓ Elküldve: {v} SOL → {a}", sent_pending:"Elküldve, de még nincs megerősítve. Nézd meg, mielőtt újra küldenéd!",
+ apikey_t:"Jupiter API kulcs", apikey_p:"A coinok vásárlásához egy ingyenes Jupiter API kulcs kell.", ak1:"Nyisd meg a Jupiter fejlesztői portált, és regisztrálj (ingyenes).", ak2:"Hozz létre egy API kulcsot, és másold ide.",
+ open_portal:"Portál megnyitása ↗", save:"Mentés", saved:"✓ Elmentve", backup_pw_p:"A titkos kulcs megjelenítéséhez add meg a jelszavad.", your_secret:"A tárcád titkos kulcsa", done:"Kész",
+ acc_create_t:"Hozd létre a fiókod", username:"Felhasználónév", un_p:"Ez lesz a neved a Kesu Walletben, és ez kerül a meghívókódodba, amivel a barátaid hozzáadhatnak.", un_hint:"3–20 karakter: kisbetű, szám vagy _. Egy tárca = egy felhasználónév: a Solana blokkláncon foglalod le (díj ≈ 0,000005 SOL), más nem veheti el, és később nem változtatható.", un_reserve:"Név lefoglalása", un_later:"Később", un_reg:"✓ Regisztrálva – nem változtatható", un_unreg:"Még nincs lefoglalva", un_wait:"Foglalás a blokkláncon… (max. 1 perc)", un_tip:"A barátaid most már egyszerűen @{u} beírásával hozzáadhatnak",
+ welcome_user:"✓ Üdv, @{u}!", create_account:"Fiók létrehozása", invite_code:"A meghívókódod",
+ invite_p:"Küldd el a barátodnak, ő ezzel tud hozzáadni. A Solana-tárcák tartalma nyilvános: aki ismeri a címed, látja, mi van benne.",
+ no_username:"Még nincs felhasználóneved", no_username_p:"Hozz létre egy @nevet, hogy a barátaid hozzáadhassanak.",
+ no_friends:"Még nincs barátod. Kérd el a barátod meghívókódját, és add hozzá a <b>+ Barát hozzáadása</b> gombbal!", wallet_value:"Tárca értéke", coins_n:"{n} coin",
+ add_friend_t:"Barát hozzáadása", add_friend_p:"Add meg a barátod meghívókódját, tárcacímét vagy .sol nevét.", af_l1:"Meghívókód, cím vagy név.sol",
+ af_l2:"Név (meghívókódnál nem kötelező)", add:"Hozzáadás", friend_added:"✓ @{n} hozzáadva a barátaidhoz", wallet_lbl:"Tárca", remove:"Eltávolítás",
+ add_as_friend:"+ Hozzáadás barátként", removed:"@{n} eltávolítva", public_note:"Ezek nyilvános adatok a Solana hálózatról. Kattints egy coinra a grafikonjához.",
+ friends_h:"Barátok", coins_h:"Coinok", wallet_h:"Tárca", view_wallet:"Tárca megtekintése", view_arrow:"Megnézem →", searching:"Keresés…",
+ no_friend_named:"Nincs ilyen nevű barátod. Barátot a meghívókódjával tudsz hozzáadni.",
+ s_avatar:"Profilkép", s_avatar_d:"JPG, PNG vagy WebP", upload:"Kép feltöltése", remove_photo:"Eltávolítás", s_username_d:"A meghívókódodban látják a barátaid",
+ s_email:"E-mail", s_email_d:"Nem kötelező",
+ s_email_note:"Csak ezen a gépen tárolódik. A Kesu Walletnek nincs szervere, ezért e-mailt nem tud küldeni, és e-mailből nem lehet visszaállítani a tárcát – csak a titkos kulccsal.",
+ s_lang:"Nyelv", s_lang_d:"Az app nyelve", s_accent:"Kiemelőszín", s_accent_d:"Gombok és kiemelések",
+ s_pw:"Jelszó módosítása", s_pw_d:"Ezzel oldod fel a tárcát", cur_pw:"Jelenlegi jelszó", new_pw:"Új jelszó", new_pw2:"Új jelszó újra", change:"Módosítás",
+ pw_changed:"✓ Jelszó módosítva", s_autolock:"Automatikus zárolás", s_autolock_d:"Zárolás tétlenség után", off:"Ki", minutes:"{n} perc",
+ s_backup:"Biztonsági mentés", s_backup_d:"A tárca titkos kulcsának megjelenítése", show_key:"Kulcs megjelenítése", s_lock:"Zárolás most", s_lock_d:"A tárca azonnali zárolása",
+ s_jup:"Jupiter API kulcs", s_jup_d:"A vételhez és eladáshoz kell", s_rpc:"Solana RPC", s_rpc_d:"Nem kötelező, üresen: nyilvános", rpc_ph:"üresen: nyilvános",
+ s_defbuy:"Alapértelmezett vételi összeg", s_defbuy_d:"Előre kitöltve a vételi panelen", s_version:"Verzió", s_data:"Adatmappa", s_data_d:"A titkosított tárcád és a beállítások",
+ avatar_big:"Ez a kép nem használható. Próbálj egy kisebb JPG-t vagy PNG-t.", locked_auto:"Zárolva tétlenség miatt", retry:"Újra", trades_n:"{n} kötés", live:"ÉLŐ", live_note:"1 mp-es gyertyák · görgővel zoomolhatsz", live_err:"Az élő ár most nem érhető el.", bs5m:"vétel / eladás (5p)", on:"Be",
+ s_instant:"Azonnali eladás", s_instant_d:"Az eladás gombok megerősítés nélkül, azonnal eladnak", s_maximp:"Ár-hatás határ azonnali eladásnál", s_maximp_d:"Ha az ár-hatás nagyobb, az eladás leáll",
+ instant_on_note:"⚡ Azonnali eladás bekapcsolva: egy kattintás és már el is adtad ({m}% ár-hatás fölött leáll).", sold_inst:"✓ Eladva: {p}% {s} → {v} SOL",
+}};
+let LANG = "en";
+const t = (k, v = {}) => String(L[LANG][k] ?? L.en[k] ?? k).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? "");
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  $$("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  $$("[data-tp]").forEach(el => el.placeholder = t(el.dataset.tp));
+  $$("[data-tt]").forEach(el => el.title = t(el.dataset.tt));
+  $("#addrPill").title = t("copy_addr");
+}
+const ACCENTS = ["#8b6cff","#5b8cff","#22c55e","#f59e0b","#ec4899","#14b8a6","#ef4444"];
+function applyAccent(c){
+  if (!ACCENTS.includes(c)) c = ACCENTS[0];
+  const r = document.documentElement.style;
+  r.setProperty("--acc", c);
+  r.setProperty("--acc2", ACCENTS[(ACCENTS.indexOf(c) + 1) % ACCENTS.length]);
+}
+
+// =============== segédek ===============
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SOL = "So11111111111111111111111111111111111111112";
+let api = null;
+async function call(name, ...args){
+  if (typeof api[name] !== "function") throw new Error("Not available in this version.");
+  const r = await api[name](...args);
+  if (r && r.error) throw new Error(r.error);
+  return r;
+}
+const SUB = "₀₁₂₃₄₅₆₇₈₉";
+function fmtPrice(p){
+  if (!p) return "$0";
+  if (p >= 1000) return "$" + p.toLocaleString("en-US",{maximumFractionDigits:0});
+  if (p >= 1) return "$" + p.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  if (p >= 0.01) return "$" + p.toFixed(4);
+  const s = p.toFixed(20).split(".")[1]; const z = s.match(/^0*/)[0].length;
+  if (z >= 4) return "$0.0" + String(z).split("").map(d => SUB[d]).join("") + s.slice(z, z + 4).replace(/0+$/,"");
+  return "$" + p.toFixed(z + 4).replace(/0+$/,"");
+}
+function fmtUsd(v){ if (!v) return "$0.00"; if (Math.abs(v) < 0.01) return "<$0.01";
+  return (v<0?"-":"") + "$" + Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtBig(v){ if (!v) return "–"; const a=Math.abs(v), B = LANG === "hu" ? "Mrd" : "B";
+  if (a>=1e9) return "$"+(v/1e9).toFixed(2)+B; if (a>=1e6) return "$"+(v/1e6).toFixed(2)+"M";
+  if (a>=1e3) return "$"+(v/1e3).toFixed(1)+"K"; return "$"+v.toFixed(0); }
+function fmtAmt(v){ if (!v) return "0"; if (v>=1e6) return (v/1e6).toFixed(2)+"M"; if (v>=1e3) return v.toLocaleString("en-US",{maximumFractionDigits:0}).replace(/,/g," ");
+  if (v>=1) return v.toLocaleString("en-US",{maximumFractionDigits:4}); return String(+v.toPrecision(4)); }
+function pct(v){ const c = v>0.005?"up":v<-0.005?"down":"flat"; const a = v>0?"▲":v<0?"▼":"";
+  return `<span class="pill ${c} num">${a} ${Math.abs(v).toFixed(2)}%</span>`; }
+function age(m){ if (m==null) return "–"; if (m<60) return Math.round(m)+" "+t("min"); if (m<2880) return (m/60).toFixed(1)+" "+t("hour"); return Math.round(m/1440)+" "+t("day"); }
+function short(a){ return a ? a.slice(0,4)+"…"+a.slice(-4) : ""; }
+const COLORS = ["#8b6cff","#5b8cff","#22c55e","#f5b83d","#f04452","#14b8a6","#ec4899","#f97316"];
+function avatar(tk, cls=""){
+  const sym = esc((tk.symbol||"?").replace("$","").slice(0,2).toUpperCase());
+  const col = COLORS[[...(tk.address||"x")].reduce((a,c)=>a+c.charCodeAt(0),0) % COLORS.length];
+  const fb = `<div class='av ${cls}' style='background:${col}'>${sym}</div>`;
+  if (!tk.logo) return fb;
+  return `<img class="av ${cls}" src="${esc(tk.logo)}" alt="" loading="lazy" data-fb="${esc(fb)}" onerror="this.outerHTML=this.dataset.fb">`;
+}
+function personAv(name, addr, cls="", img=""){
+  if (img) return `<img class="av ${cls}" src="${esc(img)}" alt="">`;
+  const col = COLORS[[...(addr||name||"x")].reduce((a,c)=>a+c.charCodeAt(0),0) % COLORS.length];
+  const ini = esc(((name||"").replace(/^@/,"") || "?").slice(0,1).toUpperCase());
+  return `<div class="av ${cls}" style="background:linear-gradient(135deg,${col},${COLORS[(COLORS.indexOf(col)+1)%COLORS.length]})">${ini}</div>`;
+}
+function toast(msg, kind="", link=null, ms=6000){
+  const el = document.createElement("div"); el.className = "toast " + kind;
+  el.innerHTML = esc(msg) + (link ? ` <a>${esc(t("see"))}</a>` : "");
+  if (link) el.querySelector("a").onclick = () => api.open_url(link);
+  $("#toasts").appendChild(el); setTimeout(() => el.remove(), ms);
+  const all = $$("#toasts .toast"), max = innerWidth < 760 ? 2 : 4;
+  all.slice(0, Math.max(0, all.length - max)).forEach(x => x.remove());
+}
+async function copyText(text, what){
+  try { await navigator.clipboard.writeText(text); }
+  catch(e){ try { await call("copy", text); } catch(e2){ toast(t("copy_fail"), "bad"); return; } }
+  toast("✓ " + (what || t("copied")), "ok", null, 2500);
+}
+function busyBtn(btn, on, txt){ if (!btn) return; btn.disabled = on; if (on){ btn._t = btn.innerHTML; btn.innerHTML = `<span class="spin"></span>`; } else if (btn._t) btn.innerHTML = txt || btn._t; }
+const onEnter = (el, fn) => el && el.addEventListener("keydown", e => { if (e.key === "Enter") fn(); });
+
+// =============== grafikon ===============
+function drawChart(canvas, pts, msgEl, anim){
+  const wrap = canvas.parentElement, dpr = window.devicePixelRatio || 1;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  if (!W || !H) return;   // rejtett oldalon nem rajzolunk (a pontok megmaradnak)
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  const g = canvas.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  if (!pts || pts.length < 2){ msgEl.textContent = t("chart_nodata"); msgEl.style.display="grid"; return; }
+  msgEl.style.display = "none";
+  const ys = pts.map(p=>p[1]); let lo = Math.min(...ys), hi = Math.max(...ys);
+  if (hi === lo){ hi *= 1.01; lo *= 0.99; }
+  const pad = {l:4, r:70, t:canvas._live ? 22 : 12, b:24};
+  const T0 = pts[0][0], T1 = pts[pts.length-1][0], TS = Math.max(T1 - T0, 1);
+  const x = i => pad.l + (W-pad.l-pad.r) * (pts[i][0] - T0) / TS;
+  const y = v => pad.t + (H-pad.t-pad.b) * (1-(v-lo)/(hi-lo));
+  const up = ys[ys.length-1] >= ys[0], col = up ? "#22c55e" : "#f04452";
+  const loc = LANG === "hu" ? "hu-HU" : "en-US";
+  g.font = "11px Segoe UI, sans-serif"; g.fillStyle = "#5a6277"; g.strokeStyle = "rgba(255,255,255,.05)"; g.lineWidth = 1;
+  for (let k=0;k<=3;k++){ const v = lo + (hi-lo)*k/3, yy = y(v);
+    g.beginPath(); g.moveTo(pad.l,yy); g.lineTo(W-pad.r+6,yy); g.stroke(); g.fillText(fmtPrice(v), W-pad.r+10, yy+4); }
+  const t0 = pts[0][0], t1 = pts[pts.length-1][0], span = t1-t0;
+  const fmtT = ts => { const d = new Date(ts*1000); return span > 3*86400 ? d.toLocaleDateString(loc,{month:"short",day:"numeric"}) : span < 900 ? d.toLocaleTimeString(loc,{hour:"2-digit",minute:"2-digit",second:"2-digit"}) : d.toLocaleTimeString(loc,{hour:"2-digit",minute:"2-digit"}); };
+  const nx = (W - pad.l - pad.r) < 330 ? 2 : 3;   // keskeny grafikonon kevesebb időcímke, hogy ne csússzanak egymásra
+  for (let k=0;k<=nx;k++){ const ts = T0 + TS*k/nx, xx = pad.l + (W-pad.l-pad.r)*k/nx, lab = fmtT(ts);
+    g.textAlign = k === 0 ? "left" : k === nx ? "right" : "center"; g.fillText(lab, xx, H-6); }
+  g.textAlign = "left";
+  const grad = g.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0, up ? "rgba(34,197,94,.28)" : "rgba(240,68,82,.28)"); grad.addColorStop(1,"rgba(0,0,0,0)");
+  g.beginPath(); pts.forEach((p,i)=> i ? g.lineTo(x(i),y(p[1])) : g.moveTo(x(i),y(p[1])));
+  g.lineTo(x(pts.length-1),H-pad.b); g.lineTo(x(0),H-pad.b); g.closePath(); g.fillStyle = grad; g.fill();
+  g.beginPath(); pts.forEach((p,i)=> i ? g.lineTo(x(i),y(p[1])) : g.moveTo(x(i),y(p[1])));
+  g.strokeStyle = col; g.lineWidth = 2; g.lineJoin = "round"; g.stroke();
+  const lx = x(pts.length-1), ly = y(ys[ys.length-1]);
+  g.fillStyle = col; g.beginPath(); g.arc(lx,ly,3.5,0,7); g.fill();
+  if (anim) return;
+  const snap = g.getImageData(0,0,W*dpr,H*dpr);
+  canvas.onmousemove = ev => {
+    const r = canvas.getBoundingClientRect(), mx = ev.clientX - r.left;
+    const tm = T0 + (mx - pad.l) / (W - pad.l - pad.r) * TS; let i = 0;
+    for (let k = 1; k < pts.length; k++) if (Math.abs(pts[k][0] - tm) < Math.abs(pts[i][0] - tm)) i = k;
+    g.putImageData(snap,0,0);
+    const px = x(i), py = y(pts[i][1]);
+    g.strokeStyle = "rgba(255,255,255,.25)"; g.setLineDash([4,4]); g.beginPath(); g.moveTo(px,pad.t); g.lineTo(px,H-pad.b); g.stroke(); g.setLineDash([]);
+    g.fillStyle = col; g.beginPath(); g.arc(px,py,5,0,7); g.fill(); g.strokeStyle="#0c0e14"; g.lineWidth=2; g.stroke();
+    const d = new Date(pts[i][0]*1000);
+    const label = fmtPrice(pts[i][1]) + "  ·  " + (span < 900 ? d.toLocaleTimeString(loc,{hour:"2-digit",minute:"2-digit",second:"2-digit"}) : d.toLocaleString(loc,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+    g.font = "600 12px Segoe UI, sans-serif"; const tw = g.measureText(label).width + 18;
+    const bx = Math.min(Math.max(px - tw/2, 2), W - tw - 2), by = Math.max(py - 40, 2);
+    g.fillStyle = "rgba(23,27,38,.96)"; g.strokeStyle = "#2d3448"; g.lineWidth = 1;
+    g.beginPath(); g.roundRect(bx,by,tw,26,8); g.fill(); g.stroke();
+    g.fillStyle = "#eef1f7"; g.fillText(label, bx+9, by+17);
+  };
+  canvas.onmouseleave = () => g.putImageData(snap,0,0);
+  canvas.ontouchstart = canvas.ontouchmove = ev => { const tt = ev.touches[0]; if (!tt) return; ev.preventDefault(); canvas.onmousemove({clientX: tt.clientX}); };
+  canvas.ontouchend = () => g.putImageData(snap,0,0);
+}
+const TFS = {en:{live:"Live","1ó":"1h","24ó":"24h","7n":"7d","30n":"30d"}, hu:{live:"Élő","1ó":"1ó","24ó":"24ó","7n":"7n","30n":"30n"}};
+function tfTabs(el, cur, onPick, keys = ["1ó","24ó","7n","30n"]){
+  el.innerHTML = keys.map(k=>`<button data-tf="${k}" class="${k===cur?"on":""}">${k==="live" ? '<i class="ldot"></i>' : ""}${TFS[LANG][k]}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => { el.querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b)); onPick(b.dataset.tf); });
+}
+const chartCache = {};
+function getChart(mint, tf){
+  const k = mint + "|" + tf, c = chartCache[k];
+  if (c && Date.now() - c.t < 60000) return c.p;
+  const p = call("chart", mint, tf).then(r => r.points);
+  chartCache[k] = {t: Date.now(), p};
+  p.catch(() => { if (chartCache[k] && chartCache[k].p === p) delete chartCache[k]; });
+  return p;
+}
+async function loadChart(mint, tf, canvas, msgEl){
+  const seq = (canvas._seq || 0) + 1; canvas._seq = seq; canvas._pts = null;
+  canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+  canvas.onmousemove = null;
+  msgEl.innerHTML = `<span style="display:flex;gap:10px;align-items:center"><span class="spin"></span>${esc(t("chart_loading"))}</span>`; msgEl.style.display = "grid";
+  setLive(canvas, false); stopCandles(canvas);
+  if (tf === "live"){
+    if (await candleLive(mint, canvas, msgEl, seq)) return;
+    if (await liveChart(mint, canvas, msgEl, seq, true)) return;
+    if (canvas._seq === seq) chartError(mint, tf, canvas, msgEl, t("live_err"));
+    return;
+  }
+  try { const pts = await getChart(mint, tf); if (canvas._seq !== seq) return; canvas._pts = pts; drawChart(canvas, pts, msgEl); }
+  catch(e){ if (canvas._seq !== seq) return;
+    if (canvas.id === "tokChart" && await liveChart(mint, canvas, msgEl, seq, false)) return;
+    if (canvas._seq === seq) chartError(mint, tf, canvas, msgEl, e.message); }
+}
+function chartError(mint, tf, canvas, msgEl, text){
+  msgEl.innerHTML = `<div style="text-align:center;max-width:320px"><div>${esc(text)}</div><button class="btn sm" style="margin-top:12px">${esc(t("retry"))}</button></div>`; msgEl.style.display = "grid";
+  msgEl.querySelector("button").onclick = () => { delete chartCache[mint + "|" + tf]; loadChart(mint, tf, canvas, msgEl); };
+}
+new ResizeObserver(() => $$("canvas").forEach(c => c.offsetParent && (c._cs ? renderCandles(c) : c._pts && drawChart(c, c._pts, c.nextElementSibling)))).observe(document.body);
+
+
+// =============== élő gyertyás grafikon (1 mp-es gyertyák valódi kötésekből) ===============
+// A kötések a GeckoTerminalról jönnek (pár mp késéssel); a köztes időt a DexScreener
+// másodpercenkénti ára tölti ki, amit a valódi kötések megérkezésükkor felülírnak.
+function stopCandles(c){ if (c._cpoll){ clearInterval(c._cpoll); c._cpoll = null; } c._cs = null; c.onwheel = null; c.onmouseleave = null; }
+function mergeTrades(cs, list){
+  for (const x of list || []) if (!cs.seen.has(x.id)){ cs.seen.add(x.id); cs.trades.push(x); }
+  cs.trades.sort((a, b) => a.t - b.t);
+  if (cs.trades.length > 4000){ const cut = cs.trades.splice(0, cs.trades.length - 4000); cut.forEach(x => cs.seen.delete(x.id)); }
+  cs.lastTradeT = cs.trades.length ? cs.trades[cs.trades.length - 1].t : 0;
+  cs.ticks = cs.ticks.filter(k => k.t > cs.lastTradeT);
+}
+function candleTick(cs, r){
+  cs.now = Math.max(cs.now || 0, r.t);
+  if (r.price > 0 && r.t > cs.lastTradeT){ cs.ticks.push({t: r.t, p: r.price, v: 0, tick: true}); if (cs.ticks.length > 900) cs.ticks.shift(); }
+}
+async function candleLive(mint, canvas, msgEl, seq){
+  const [tr, lv] = await Promise.all([call("trades", mint).catch(() => null), call("live", mint).catch(() => null)]);
+  if (canvas._seq !== seq) return true;
+  if (!(tr && tr.trades.length) && !lv) return false;
+  const cs = {mint, trades: [], ticks: [], seen: new Set(), lastTradeT: 0, now: (lv || tr).t, win: S.candleWin || 150, hover: null};
+  mergeTrades(cs, tr ? tr.trades : []);
+  if (lv){ lv.mint = mint; S.lastLive = lv; candleTick(cs, lv); }
+  canvas._cs = cs; canvas._pts = null; msgEl.style.display = "none"; setLive(canvas, true);
+  // görgő: zoom (30 mp … 10 perc)
+  canvas.onwheel = ev => { ev.preventDefault(); cs.win = Math.round(Math.min(600, Math.max(30, cs.win * (ev.deltaY > 0 ? 1.2 : 1/1.2)))); S.candleWin = cs.win; renderCandles(canvas); };
+  canvas.onmousemove = ev => { const r = canvas.getBoundingClientRect(); cs.hover = ev.clientX - r.left; renderCandles(canvas); };
+  canvas.onmouseleave = () => { cs.hover = null; renderCandles(canvas); };
+  let busy = false;
+  canvas._cpoll = setInterval(async () => {
+    if (canvas._cs !== cs || !canvas.isConnected){ clearInterval(canvas._cpoll); return; }
+    cs.now = Math.max(cs.now, Date.now()/1000 - (S.clockSkew || 0)); renderCandles(canvas);     // az idő akkor is halad, ha nincs új ár
+    if (busy || !canvas.offsetParent || (Date.now() - (cs.lastPoll || 0)) < 4000) return;
+    busy = true; cs.lastPoll = Date.now();
+    try { const r = await call("trades", mint); if (canvas._cs === cs){ mergeTrades(cs, r.trades); renderCandles(canvas); } } catch(e){} finally { busy = false; }
+  }, 1000);
+  if (lv) S.clockSkew = Date.now()/1000 - lv.t;
+  renderCandles(canvas);
+  return true;
+}
+function buildCandles(cs){
+  const t1 = Math.floor(cs.now), t0 = t1 - cs.win + 1;
+  const pts = cs.trades.concat(cs.ticks).sort((a, b) => a.t - b.t);
+  let i = 0, prev = null;
+  while (i < pts.length && pts[i].t < t0) prev = pts[i++].p;
+  const out = [];
+  for (let s = t0; s <= t1; s++){
+    let o = prev, h = prev, l = prev, c = prev, vb = 0, vs = 0, n = 0;
+    while (i < pts.length && pts[i].t < s + 1){
+      const p = pts[i++];
+      if (o == null) o = h = l = p.p;
+      h = Math.max(h, p.p); l = Math.min(l, p.p); c = p.p;
+      if (!p.tick){ n++; if (p.side === "sell") vs += p.v; else vb += p.v; }
+    }
+    out.push(c == null ? null : {t: s, o, h, l, c, vb, vs, n});
+    if (c != null) prev = c;
+  }
+  return out;
+}
+function renderCandles(canvas){
+  const cs = canvas._cs; if (!cs) return;
+  const wrap = canvas.parentElement, dpr = window.devicePixelRatio || 1, W = wrap.clientWidth, H = wrap.clientHeight;
+  if (!W || !H) return;
+  if (canvas.width !== W*dpr || canvas.height !== H*dpr){ canvas.width = W*dpr; canvas.height = H*dpr; }
+  const g = canvas.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const cd = buildCandles(cs), vis = cd.filter(Boolean);
+  const msg = canvas.nextElementSibling;
+  if (!vis.length){ msg.textContent = t("chart_nodata"); msg.style.display = "grid"; return; }
+  msg.style.display = "none";
+  const pad = {l: 6, r: 74, t: 64, b: 24}, volH = Math.round((H - pad.t - pad.b) * 0.16);
+  const pH = H - pad.t - pad.b - volH - 6;
+  let lo = Math.min(...vis.map(c => c.l)), hi = Math.max(...vis.map(c => c.h));
+  if (hi === lo){ hi *= 1.004; lo *= 0.996; }
+  const m = (hi - lo) * 0.18; hi += m; lo -= m;                          // kicsit kizoomolva: hely felül-alul
+  const plotW = W - pad.l - pad.r, slot = plotW / cs.win, bw = Math.max(1, Math.min(14, slot * 0.62));
+  const X = k => pad.l + slot * (k + 0.5), Y = v => pad.t + pH * (1 - (v - lo) / (hi - lo));
+  const loc = LANG === "hu" ? "hu-HU" : "en-US", UP = "#22c55e", DN = "#f04452";
+  // rács + árcímkék
+  g.font = "11px Segoe UI, sans-serif"; g.lineWidth = 1;
+  for (let k = 0; k <= 4; k++){ const v = lo + (hi - lo) * k / 4, yy = Math.round(Y(v)) + .5;
+    g.strokeStyle = "rgba(255,255,255,.05)"; g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(W - pad.r + 4, yy); g.stroke();
+    g.fillStyle = "#5a6277"; g.fillText(fmtPrice(v), W - pad.r + 10, yy + 4); }
+  // időcímkék
+  const nx = plotW < 360 ? 2 : 4;
+  for (let k = 0; k <= nx; k++){ const idx = Math.round((cd.length - 1) * k / nx), ts = cs.now - (cd.length - 1 - idx);
+    g.textAlign = k === 0 ? "left" : k === nx ? "right" : "center"; g.fillStyle = "#5a6277";
+    g.fillText(new Date(ts * 1000).toLocaleTimeString(loc, {hour: "2-digit", minute: "2-digit", second: "2-digit"}), k === 0 ? pad.l : k === nx ? W - pad.r : X(idx), H - 6); }
+  g.textAlign = "left";
+  // forgalom
+  const vmax = Math.max(1e-9, ...vis.map(c => c.vb + c.vs)), vBase = pad.t + pH + 6 + volH;
+  let dir = UP;
+  cd.forEach((c, k) => { if (!c) return;
+    dir = c.c > c.o ? UP : c.c < c.o ? DN : dir;
+    const v = c.vb + c.vs; if (v > 0){ const hh = Math.max(1, volH * v / vmax); g.fillStyle = (c.vb >= c.vs ? UP : DN) + "66"; g.fillRect(X(k) - bw/2, vBase - hh, bw, hh); }
+  });
+  // gyertyák
+  dir = UP;
+  cd.forEach((c, k) => { if (!c) return;
+    dir = c.c > c.o ? UP : c.c < c.o ? DN : dir;
+    const x = X(k), yo = Y(c.o), yc = Y(c.c), yh = Y(c.h), yl = Y(c.l);
+    g.strokeStyle = g.fillStyle = dir;
+    if (yl - yh >= 1){ g.beginPath(); g.moveTo(Math.round(x) + .5, yh); g.lineTo(Math.round(x) + .5, yl); g.stroke(); }
+    const top = Math.min(yo, yc), bh = Math.max(1.2, Math.abs(yc - yo));
+    g.fillRect(x - bw/2, top - (bh === 1.2 ? .6 : 0), bw, bh);
+  });
+  // aktuális ár szaggatott vonallal + címke
+  const last = vis[vis.length - 1], ly = Y(last.c), lc = last.c >= (vis[0].o) ? UP : DN;
+  g.setLineDash([3, 3]); g.strokeStyle = lc + "aa"; g.beginPath(); g.moveTo(pad.l, ly); g.lineTo(W - pad.r + 4, ly); g.stroke(); g.setLineDash([]);
+  g.fillStyle = lc; g.beginPath(); g.roundRect(W - pad.r + 4, ly - 10, pad.r - 6, 20, 5); g.fill();
+  g.fillStyle = "#fff"; g.font = "600 11px Segoe UI, sans-serif"; g.fillText(fmtPrice(last.c), W - pad.r + 9, ly + 4);
+  // egér: célkereszt + O/H/L/C
+  let sel = last;
+  if (cs.hover != null){ const k = Math.max(0, Math.min(cd.length - 1, Math.floor((cs.hover - pad.l) / slot)));
+    if (cd[k]){ sel = cd[k]; const x = X(k); g.strokeStyle = "rgba(255,255,255,.22)"; g.setLineDash([4, 4]);
+      g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, vBase); g.stroke(); g.setLineDash([]); } }
+  const ch = sel.o ? (sel.c / sel.o - 1) * 100 : 0, sc = sel.c >= sel.o ? UP : DN;
+  g.font = "600 11.5px Segoe UI, sans-serif"; let x = pad.l + 4; const yL = 34;
+  const part = (lbl, val, col) => { g.fillStyle = "#8a93a8"; g.fillText(lbl, x, yL); x += g.measureText(lbl).width + 3; g.fillStyle = col; g.fillText(val, x, yL); x += g.measureText(val).width + 10; };
+  part("", new Date(sel.t * 1000).toLocaleTimeString(loc, {hour: "2-digit", minute: "2-digit", second: "2-digit"}), "#cfd5e2");
+  part("O", fmtPrice(sel.o), sc); part("H", fmtPrice(sel.h), sc); part("L", fmtPrice(sel.l), sc); part("C", fmtPrice(sel.c), sc);
+  part("", (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%", sc);
+  if (sel.vb + sel.vs > 0) part("Vol", fmtUsd(sel.vb + sel.vs), "#cfd5e2");
+  g.fillStyle = "#5a6277"; g.font = "11px Segoe UI, sans-serif"; g.fillText(`${cs.win}s · ${t("trades_n", {n: cs.trades.length})}`, pad.l + 4, yL + 17);
+}
+
+// =============== élő ár és grafikon (a legújabb tokenekhez) ===============
+function setLive(canvas, on){
+  canvas._live = on; let b = canvas.parentElement.querySelector(".live-badge");
+  if (on && !b){ b = document.createElement("div"); b.className = "live-badge"; canvas.parentElement.appendChild(b); }
+  if (b){ if (on) b.innerHTML = `<i></i>${esc(t("live"))} <span>${esc(t("live_note"))}</span>`; else b.remove(); }
+}
+const LIVE_WINDOW = 180;   // az élő grafikon az utolsó 3 percet mutatja, másodperces pontokkal
+async function liveChart(mint, canvas, msgEl, seq, useMinutes){
+  const [r, mins] = await Promise.all([
+    (S.lastLive && S.lastLive.mint === mint && Date.now()/1000 - S.lastLive.t < 3) ? Promise.resolve(S.lastLive)
+      : call("live", mint).then(x => (x.mint = mint, x)).catch(() => null),
+    useMinutes ? getChart(mint, "1ó").catch(() => null) : Promise.resolve(null)]);
+  if (canvas._seq !== seq) return true;
+  if (!r) return false;
+  const now = Math.floor(r.t);
+  let pts = (mins || []).filter(p => p[0] >= now - LIVE_WINDOW - 60 && p[0] < now - 1).slice(-4);
+  if (pts.length < 2){   // nincs percenkénti adat: becslés a DexScreener 5 perces változásából
+    pts = []; if (r.m5 != null && !(r.age_min != null && r.age_min < 5)){ const v = r.price / (1 + r.m5/100); if (isFinite(v) && v > 0) pts.push([now - 300, v]); }
+  }
+  pts.push([now, r.price]);
+  if (pts.length === 1) pts.unshift([now - 1, r.price]);
+  canvas._window = LIVE_WINDOW; canvas._liveStart = now;
+  canvas._pts = pts; setLive(canvas, true); trimLive(canvas, now); drawChart(canvas, canvas._pts, msgEl);
+  return true;
+}
+// az ablak 30 mp-ről indul és az élő pontokkal együtt nő 3 percig, így az elejétől részletes
+function trimLive(c, now){
+  if (!c._window || !c._pts) return;
+  const win = Math.min(c._window, Math.max(30, now - (c._liveStart || now) + 30)), lim = now - win;
+  let k = 0; while (k < c._pts.length - 2 && c._pts[k][0] < lim) k++;
+  if (k) c._pts.splice(0, k);
+}
+function stopLive(){ if (S.liveTimer){ clearInterval(S.liveTimer); S.liveTimer = null; } S.liveMint = null; }
+function startTokenLive(mint){
+  stopLive(); S.liveMint = mint;
+  const tick = async () => {
+    if (S.page !== "token" || S.liveMint !== mint){ stopLive(); return; }
+    try { const r = await call("live", mint); if (S.liveMint !== mint) return; r.mint = mint; applyLive(r); } catch(e){}
+  };
+  let busy = false;
+  const safeTick = async () => { if (busy) return; busy = true; try { await tick(); } finally { busy = false; } };
+  S.liveTimer = setInterval(safeTick, 1000); safeTick();
+}
+function applyLive(r){
+  S.lastLive = r;
+  const cc = $("#tokChart");
+  if (cc && cc._cs && cc._cs.mint === r.mint){ candleTick(cc._cs, r); renderCandles(cc); }
+  if ($("#tPrice")){ $("#tPrice").textContent = fmtPrice(r.price); $("#tChg").innerHTML = pct(r.h24 || 0); }
+  if ($("#tLive")) $("#tLive").innerHTML = `5m ${pct(r.m5 || 0)} · <b class="up">${r.buys5}</b> / <b class="down">${r.sells5}</b> ${esc(t("bs5m"))}`;
+  const c = $("#tokChart");
+  if (c && c._live && c._pts){ const ts = Math.floor(r.t), last = c._pts[c._pts.length-1];
+    if (ts > last[0]){ c._pts.push([ts, r.price]);
+      trimLive(c, ts);   // gördülő ablak
+      if (c._pts.length > 900) c._pts.splice(0, c._pts.length - 900);
+      animateLast(c, last); } }
+}
+// az utolsó szakasz sima kirajzolása (~0,8 mp); a pontok maguk valódi árak
+function animateLast(c, prev){
+  cancelAnimationFrame(c._raf); const msg = c.nextElementSibling, pts = c._pts, next = pts[pts.length-1], t0 = performance.now();
+  if (!prev || prev[0] >= next[0]){ drawChart(c, pts, msg); return; }
+  const frame = now => {
+    if (c._pts !== pts || !c.isConnected) return;
+    const k = Math.min(1, (now - t0) / 800), e = 1 - Math.pow(1 - k, 3);
+    if (k < 1){ const tmp = pts.slice(0, -1); tmp.push([prev[0] + (next[0]-prev[0])*e, prev[1] + (next[1]-prev[1])*e]); drawChart(c, tmp, msg, true); c._raf = requestAnimationFrame(frame); }
+    else drawChart(c, pts, msg);
+  };
+  c._raf = requestAnimationFrame(frame);
+}
+
+// =============== állapot ===============
+const S = {pub:null, port:null, page:"home", mkKind:"popular", token:null, solTf:"24ó", tokTf:"24ó", prof:{}, locked:true};
+
+// =============== belépés ===============
+function gate(html){ $("#gatecard").innerHTML = `<div class="logo">K</div>` + html; $("#gate").classList.add("on"); $("#app").style.display = "none"; }
+function gateWelcome(){
+  gate(`<h2>${t("welcome_t")}</h2><p>${t("welcome_p")}</p>
+   <div class="stack"><button class="btn pri lg" id="gNew">${t("create_wallet")}</button><button class="btn lg" id="gImp">${t("import_wallet")}</button></div>
+   <div class="langsw">${langSwitch()}</div>`);
+  $("#gNew").onclick = gateCreate; $("#gImp").onclick = gateImport; bindLangSwitch(gateWelcome);
+}
+function langSwitch(){ return `<div class="tabs"><button data-lang="en" class="${LANG==="en"?"on":""}">English</button><button data-lang="hu" class="${LANG==="hu"?"on":""}">Magyar</button></div>`; }
+function bindLangSwitch(rerender){ $$("[data-lang]").forEach(b => b.onclick = async () => { await setLang(b.dataset.lang); rerender(); }); }
+async function setLang(l){ LANG = l; applyI18n(); try { await call("profile_update", {lang:l}); } catch(e){} }
+function pwFields(){ return `<label class="cap">${t("pw_label")}</label><div class="field"><input id="pw1" type="password"></div>
+  <label class="cap">${t("pw_again")}</label><div class="field"><input id="pw2" type="password"></div>`; }
+function pwCheck(){ const a=$("#pw1").value, b=$("#pw2").value; if (a.length<8) throw new Error(t("pw_short")); if (a!==b) throw new Error(t("pw_mismatch")); return a; }
+function gateCreate(){
+  gate(`<h2>${t("new_wallet")}</h2><p>${t("new_wallet_p")}</p>${pwFields()}
+   <div class="err" id="gErr" style="margin-top:10px"></div><div class="mrow"><button class="btn" id="gBack">${t("back_btn")}</button><button class="btn pri" id="gGo">${t("create")}</button></div>`);
+  $("#gBack").onclick = gateWelcome; $("#pw1").focus();
+  const go = async () => { const b = $("#gGo"); try { const pw = pwCheck(); busyBtn(b,true); const r = await call("create_wallet", pw); gateBackup(r.secret); }
+    catch(err){ busyBtn(b,false); $("#gErr").textContent = err.message; } };
+  $("#gGo").onclick = go; onEnter($("#pw2"), go);
+}
+function gateImport(){
+  gate(`<h2>${t("import_t")}</h2><p>${t("import_p")}</p>
+   <label class="cap">${t("secret_key")}</label><div class="field"><input id="sec" type="password" class="mono"></div>${pwFields()}
+   <div class="err" id="gErr" style="margin-top:10px"></div><div class="mrow"><button class="btn" id="gBack">${t("back_btn")}</button><button class="btn pri" id="gGo">${t("import")}</button></div>`);
+  $("#gBack").onclick = gateWelcome; $("#sec").focus();
+  const go = async () => { const b = $("#gGo"); try { const pw = pwCheck(); busyBtn(b,true); await call("import_wallet", $("#sec").value, pw); enterApp(); }
+    catch(err){ busyBtn(b,false); $("#gErr").textContent = err.message; } };
+  $("#gGo").onclick = go; onEnter($("#pw2"), go);
+}
+function secretView(secret){
+  return `<div class="warnbox">${t("sec_warn")}</div>
+   <div class="box addr-big" id="secBox" style="margin-top:12px;filter:blur(6px);cursor:pointer">${esc(secret)}</div>
+   <div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" id="secShow">${t("show")}</button><button class="btn sm" id="secCopy">${t("copy")}</button></div>`;
+}
+function bindSecret(secret){
+  const tg = () => { const b=$("#secBox"); const h = b.style.filter; b.style.filter = h ? "" : "blur(6px)"; $("#secShow").textContent = h ? t("hide") : t("show"); };
+  $("#secBox").onclick = tg; $("#secShow").onclick = tg; $("#secCopy").onclick = () => copyText(secret, t("secret_copied"));
+}
+function gateBackup(secret){
+  gate(`<h2>${t("backup_t")}</h2><p>${t("backup_p")}</p>${secretView(secret)}
+   <label style="display:flex;gap:10px;align-items:center;margin-top:16px;cursor:pointer"><input type="checkbox" id="saved"> <span>${t("saved_it")}</span></label>
+   <div class="mrow"><button class="btn pri" id="gGo" disabled>${t("to_wallet")}</button></div>`);
+  bindSecret(secret); $("#saved").addEventListener("change", e => { $("#gGo").disabled = !e.target.checked; }); $("#gGo").onclick = enterApp;
+}
+function gateUnlock(pub){
+  gate(`<h2>${t("unlock_t")}</h2><p class="mono">${esc(short(pub))}</p><label class="cap">${t("password")}</label><div class="field"><input id="pw" type="password"></div>
+   <div class="err" id="gErr" style="margin-top:10px"></div><div class="mrow"><button class="btn pri lg" id="gGo">${t("unlock")}</button></div>
+   <div class="langsw">${langSwitch()}</div>`);
+  const go = async () => { const b=$("#gGo"); busyBtn(b,true); try { await call("unlock", $("#pw").value); enterApp(); } catch(err){ busyBtn(b,false); $("#gErr").textContent = err.message; } };
+  $("#gGo").onclick = go; onEnter($("#pw"), go); $("#pw").focus(); bindLangSwitch(() => gateUnlock(pub));
+}
+
+// =============== app ===============
+async function enterApp(){
+  const st = await call("state"); S.pub = st.pubkey; S.locked = false; S.port = null; S.lastAct = Date.now();
+  S.prof = await call("profile_get").catch(() => ({}));
+  LANG = S.prof.lang || st.lang || "en"; applyAccent(S.prof.accent || st.accent); applyI18n();
+  $("#gate").classList.remove("on"); $("#gatecard").innerHTML = ""; $("#app").style.display = "flex";
+  $("#addrShort").textContent = short(S.pub); updateMe();
+  showPage("home"); refreshPortfolio(); loadMarket(); loadSwaps();
+  const ac = await call("acct_status").catch(() => null); S.acct = ac;
+  if (ac && ac.configured && !ac.logged_in) setTimeout(() => modalAccount("register", true, !st.has_jup_key), 500);
+  else if (!st.has_jup_key) setTimeout(() => modalApiKey(), 600);
+}
+function showPage(p){
+  S.page = p; $$(".page").forEach(x => x.classList.toggle("on", x.id === "p-"+p));
+  if (p !== "token") stopLive();
+  if (p !== "btc") S.btcSeq = (S.btcSeq || 0) + 1;
+  const navp = p === "token" ? (S.back === "home" ? "home" : S.back === "wallet" ? "friends" : "market") : p === "wallet" ? "friends" : p;
+  $$("#nav button[data-p], .side-bottom button[data-p], #tabbar button[data-p]").forEach(b => b.classList.toggle("on", b.dataset.p === navp));
+  $("#main").scrollTop = 0;
+  if (p === "home" && S.port) setTimeout(() => homeChart(), 0);
+  if (p === "friends") loadFriends();
+  if (p === "settings") renderSettings();
+  if (p === "btc") loadBtc();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-p],[data-a]"); if (!b || b.closest(".tabs")) return;
+  if (b.dataset.p) showPage(b.dataset.p);
+  const a = b.dataset.a;
+  if (a === "send") modalSend(); else if (a === "receive") modalReceive(); else if (a === "buysol") modalBuySol();
+  else if (a === "lock") doLock();
+  else if (a === "logout") modalLogout();
+  else if (a === "btcsend") modalBtcSend(); else if (a === "btcrecv") modalBtcReceive();
+  else if (a === "xswap") modalXswap("btc2sol");
+  else if (a === "btcexp" && S.btc) api.open_url("https://mempool.space/address/" + S.btc.address);
+});
+async function doLock(auto){
+  await call("lock").catch(()=>{}); S.locked = true; S.port = null; closeModal(); gateUnlock(S.pub);
+  if (auto) setTimeout(() => toast(t("locked_auto")), 100);
+}
+$("#addrPill").onclick = () => copyText(S.pub, t("addr_copied"));
+$("#refreshBtn").onclick = () => refreshPortfolio(true);
+$("#backBtn").onclick = () => S.back === "wallet" && S.wallet ? openWallet(S.wallet, S.wback) : showPage(S.back || "market");
+$("#wBack").onclick = () => showPage(S.wback || "friends");
+$("#meChip").onclick = () => S.prof.registered ? showPage("settings") : modalAccount("register");
+function updateMe(){ $("#meAv").innerHTML = personAv(S.prof.username || "?", S.pub, "sm", S.prof.avatar); $("#meName").textContent = S.prof.username ? "@" + S.prof.username : t("create_account"); }
+
+// automatikus zárolás
+["mousemove","keydown","mousedown","wheel"].forEach(ev => document.addEventListener(ev, () => { S.lastAct = Date.now(); }, {passive:true}));
+setInterval(() => { const m = +(S.prof.autolock ?? 15); if (!S.locked && m > 0 && Date.now() - (S.lastAct||Date.now()) > m*60000) doLock(true); }, 15000);
+
+// =============== portfólió ===============
+async function refreshPortfolio(manual){
+  try {
+    const old = S.port; const p = await call("portfolio"); S.port = p;
+    if (old && p.lamports - old.lamports > 100000) toast(t("arrived", {v: fmtAmt((p.lamports-old.lamports)/1e9)}), "ok");
+    $("#total").textContent = fmtUsd(p.total);
+    $("#solAmt").textContent = fmtAmt(p.sol) + " SOL";
+    $("#chg").innerHTML = p.total ? pct(p.change_pct) : "";
+    const sol = p.items[0]; $("#solLogo").src = sol.logo || "";
+    $("#solPrice").textContent = fmtPrice(p.sol_price); $("#solChg").innerHTML = pct(sol.change24h || 0);
+    renderAssets($("#holdings"), p.items, true);
+    if (!old) homeChart();
+    if (manual) toast(t("refreshed"), "", null, 1500);
+  } catch(e){ if (manual || !S.port) toast(e.message, "bad"); if (!S.port) $("#holdings").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+function homeChart(){
+  tfTabs($("#homeTf"), S.solTf, tf => { S.solTf = tf; homeChart(); });
+  loadChart(SOL, S.solTf, $("#homeChart"), $("#homeChartMsg"));
+}
+function renderAssets(el, items, own){
+  const rows = items.filter((x,i) => i===0 || x.amount > 0);
+  el.innerHTML = `<div class="row head"><div>${t("h_asset")}</div><div class="r">${t("h_price")}</div><div class="r">${t("h_amount")}</div><div class="r">${t("h_value")}</div></div>` +
+    rows.map(tk => `<div class="row" data-m="${esc(tk.address)}"><div class="tk">${avatar(tk)}<div style="min-width:0"><b>${esc(tk.name || tk.symbol)}</b><small>${esc(tk.symbol)}</small></div></div>
+      <div class="r num">${fmtPrice(tk.price)}<div>${pct(tk.change24h||0)}</div></div><div class="r num">${fmtAmt(tk.amount)}<small class="muted" style="display:block">${esc(tk.symbol)}</small></div><div class="r num" style="font-weight:700">${fmtUsd(tk.value)}</div></div>`).join("") +
+    (rows.length === 1 ? `<div class="empty">${own ? t("empty_own") : t("empty_other")}</div>` : "");
+  el.querySelectorAll(".row[data-m]").forEach(r => r.onclick = () => openToken(r.dataset.m, own ? "home" : "wallet"));
+}
+
+// =============== piac ===============
+$$("#mkTabs button").forEach(b => b.onclick = () => { $$("#mkTabs button").forEach(x => x.classList.toggle("on", x===b)); S.mkKind = b.dataset.k; $("#q").value=""; loadMarket(); });
+let qTimer = null;
+$("#q").addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(() => { const q = $("#q").value.trim(); q ? doSearch(q) : loadMarket(); }, 450); });
+function skelRows(n){ return Array.from({length:n},()=>`<div class="row" style="cursor:default"><div class="tk"><div class="av skel"></div><div class="skel" style="width:120px;height:14px"></div></div><div class="skel" style="height:14px"></div><div class="skel" style="height:14px"></div><div class="skel" style="height:14px"></div></div>`).join(""); }
+async function loadMarket(){ $("#mlist").innerHTML = skelRows(8);
+  try { const r = await call("market", S.mkKind); renderMarket(r.items); } catch(e){ $("#mlist").innerHTML = `<div class="empty">${esc(e.message)}</div>`; } }
+async function doSearch(q){ $("#mlist").innerHTML = skelRows(5);
+  try { const r = await call("search", q); renderMarket(r.items); } catch(e){ $("#mlist").innerHTML = `<div class="empty">${esc(e.message)}</div>`; } }
+function renderMarket(items){
+  if (!items.length){ $("#mlist").innerHTML = `<div class="empty">${t("no_results")}</div>`; return; }
+  const showAge = S.mkKind === "new" && !$("#q").value.trim();
+  $("#mlist").innerHTML = `<div class="row head"><div>#</div><div>${t("h_coin")}</div><div class="r">${t("h_price")}</div><div class="r">${t("h_24h")}</div><div class="r">${showAge?t("h_age"):t("h_vol")}</div><div class="r">${t("h_mcap")}</div><div class="r">${t("h_liq")}</div></div>` +
+    items.map((tk,i) => `<div class="row" data-m="${esc(tk.address)}"><div class="rank">${i+1}</div><div class="tk">${avatar(tk)}<div style="min-width:0"><b>${esc(tk.name || tk.symbol)}</b><small>${esc(tk.symbol)}</small></div></div>
+     <div class="r num" style="font-weight:650">${fmtPrice(tk.price)}</div><div class="r">${pct(tk.change24h||0)}</div><div class="r num muted">${showAge ? age(tk.age_min) : fmtBig(tk.volume24)}</div><div class="r num muted">${fmtBig(tk.mcap)}</div><div class="r num muted">${fmtBig(tk.liquidity)}</div></div>`).join("");
+  $$("#mlist .row[data-m]").forEach(r => r.onclick = () => openToken(r.dataset.m, "market"));
+}
+
+// =============== token oldal ===============
+async function openToken(mint, back){
+  S.back = back; S.tokTf = mint === SOL ? "24ó" : "live"; showPage("token");
+  getChart(mint, mint === SOL ? "24ó" : "1ó").catch(() => {});   // a grafikon adatai már most elkezdenek töltődni
+  $("#tokenBody").innerHTML = `<div class="th"><div class="av lg skel"></div><div><div class="skel" style="width:220px;height:26px"></div><div class="skel" style="width:140px;height:30px;margin-top:8px"></div></div></div><div class="card skel" style="height:380px"></div>`;
+  let tk; try { tk = await call("token", mint); } catch(e){ $("#tokenBody").innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return; }
+  S.token = tk;
+  const isSol = tk.address === SOL;
+  const links = [...(tk.websites||[]).slice(0,1).map(u=>[t("website"),u]), ...(tk.socials||[]).map(s=>[s.type==="twitter"?"X":s.type==="telegram"?"Telegram":s.type,s.url])].slice(0,3);
+  const reasons = tk.rug.reasons.length ? tk.rug.reasons : [{level:"ok",text:t("no_rug")}];
+  $("#tokenBody").innerHTML = `
+   <div class="th">${avatar(tk,"lg")}<div><h1>${esc(tk.name || tk.symbol)} <span class="sym">${esc(tk.symbol)}</span></h1>
+     <div class="price num"><span id="tPrice">${fmtPrice(tk.price)}</span> <span id="tChg">${pct(tk.change24h||0)}</span></div></div>
+     <div class="links">${links.map(([n,u])=>`<button class="btn sm" data-url="${esc(u)}">${esc(n)} ↗</button>`).join("")}</div></div>
+   <div class="chips"><span class="chip">${t("mcap")} <b class="num">${fmtBig(tk.mcap)}</b></span><span class="chip">${t("liq")} <b class="num">${fmtBig(tk.liquidity)}</b></span>
+     <span class="chip">${t("vol24")} <b class="num">${fmtBig(tk.volume24)}</b></span><span class="chip">${t("age")} <b>${age(tk.age_min)}</b></span>
+     <span class="chip mono" style="cursor:pointer" id="caChip">${esc(short(tk.address))} ⧉</span>${isSol ? "" : `<span class="chip" id="tLive"></span>`}</div>
+   <div class="tgrid">
+     <div>
+       <div class="card chart-card"><div class="chart-head"><div class="cap">${t("price_chart")}</div><div class="tabs" id="tokTf"></div></div>
+         <div class="chart-wrap"><canvas id="tokChart"></canvas><div class="chart-msg" id="tokChartMsg"></div></div></div>
+       ${isSol ? "" : `<div class="card rug"><div class="rug-h"><div class="cap">${t("safety")}</div><span class="badge lv${tk.rug.level}">${t("rug"+tk.rug.level)}</span></div>
+         <ul>${reasons.map(r=>`<li><i style="background:${r.level==="danger"?"var(--down)":r.level==="warn"?"var(--warn)":"var(--up)"}"></i>${esc(r.text)}</li>`).join("")}</ul></div>`}
+     </div>
+     <div class="card trade" id="trade"></div>
+   </div>`;
+  $$("#tokenBody [data-url]").forEach(b => b.onclick = () => api.open_url(b.dataset.url));
+  $("#caChip").onclick = () => copyText(tk.address, t("ca_copied"));
+  tfTabs($("#tokTf"), S.tokTf, tf => { S.tokTf = tf; loadChart(tk.address, tf, $("#tokChart"), $("#tokChartMsg")); }, isSol ? undefined : ["live","1ó","24ó","7n","30n"]);
+  loadChart(tk.address, S.tokTf, $("#tokChart"), $("#tokChartMsg"));
+  renderTrade(tk, "buy");
+  if (!isSol) startTokenLive(tk.address);
+}
+function renderTrade(tk, side){
+  const el = $("#trade"), isSol = tk.address === SOL;
+  if (isSol){ el.innerHTML = `<div class="cap">SOL</div><p class="muted" style="margin:10px 0 16px;font-size:13.5px">${t("sol_card")}</p>
+     <div class="kv"><span>${t("you_have")}</span><b class="num">${fmtAmt(tk.held)} SOL</b></div><button class="btn buy lg" style="width:100%;margin-top:14px" data-a="buysol">${t("buy_sol_card")}</button>
+     <button class="btn lg" style="width:100%;margin-top:8px" data-a="send">${t("send_sol")}</button>`; return; }
+  const solBal = S.port ? S.port.sol : 0, def = S.prof.default_buy || "0.1";
+  el.innerHTML = `<div class="tabs"><button class="b ${side==="buy"?"on":""}" data-s="buy">${t("buy")}</button><button class="s ${side==="sell"?"on":""}" data-s="sell">${t("sell")}</button></div>` +
+   (side === "buy" ? `
+     <div class="cap">${t("amount")}</div><div class="field" style="margin-top:6px"><input id="buyAmt" class="num" value="${esc(def)}" inputmode="decimal"><span class="unit">SOL</span></div>
+     <div class="presets">${["0.05","0.1","0.25","0.5"].map(v=>`<button data-v="${v}">${v}</button>`).join("")}</div>
+     <div class="kv"><span>${t("available")}</span><b class="num">${fmtAmt(solBal)} SOL</b></div>
+     <div class="kv"><span>${t("est_value")}</span><b class="num" id="buyUsd">–</b></div>
+     <div class="err" id="tErr" style="margin-top:8px"></div>
+     <button class="btn buy lg" style="width:100%;margin-top:6px" id="tGo">${esc(t("buy_x",{s:tk.symbol}))}</button>` : `
+     <div class="kv"><span>${t("you_have")}</span><b class="num">${fmtAmt(tk.held)} ${esc(tk.symbol)}</b></div>
+     <div class="kv"><span>${t("worth")}</span><b class="num">${fmtUsd(tk.held * tk.price)}</b></div>
+     <div class="cap" style="margin-top:14px">${t("how_much_sell")}</div>
+     <div class="presets">${[25,50,100].map(v=>`<button data-p2="${v}" class="${S.prof.instant_sell ? "instant" : ""}">${S.prof.instant_sell ? "⚡ " : ""}${v}%</button>`).join("")}</div>
+     ${S.prof.instant_sell ? `<div class="faint" style="font-size:12px">${t("instant_on_note", {m: S.prof.max_impact ?? 10})}</div>` : ""}
+     <div class="err" id="tErr"></div>`);
+  el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => renderTrade(tk, b.dataset.s));
+  if (side === "buy"){
+    const upd = () => { const v = parseFloat(($("#buyAmt").value||"").replace(",",".")); $("#buyUsd").textContent = v>0 && S.port ? fmtUsd(v*S.port.sol_price) : "–"; };
+    $("#buyAmt").addEventListener("input", upd); upd();
+    el.querySelectorAll("[data-v]").forEach(b => b.onclick = () => { $("#buyAmt").value = b.dataset.v; upd(); });
+    const go = async () => { const b = $("#tGo"); $("#tErr").textContent = ""; busyBtn(b,true);
+      try { const q = await call("quote_buy", tk.address, $("#buyAmt").value); busyBtn(b,false); modalConfirm(q, "buy", tk); }
+      catch(err){ busyBtn(b,false); $("#tErr").textContent = err.message; if (/API (kulcs|key)/.test(err.message)) modalApiKey(); } };
+    $("#tGo").onclick = go; onEnter($("#buyAmt"), go);
+  } else {
+    el.querySelectorAll("[data-p2]").forEach(b => b.onclick = async () => { $("#tErr").textContent = ""; if (!(tk.held > 0)) { $("#tErr").textContent = t("no_token"); return; }
+      const pc = +b.dataset.p2; busyBtn(b,true);
+      if (S.prof.instant_sell){   // ⚡ azonnali eladás: ajánlat + aláírás + küldés egy lépésben
+        try { const r = await call("instant_sell", tk.address, pc); busyBtn(b,false);
+          const link = r.signature ? "https://solscan.io/tx/" + r.signature : null;
+          if (r.success) toast(t("sold_inst", {p: pc, s: tk.symbol, v: (+r.sol).toPrecision(4)}), "ok", link, 9000); else toast(r.message, "bad", link, 12000);
+          setTimeout(async () => { await refreshPortfolio(); if (S.page==="token" && S.token && S.token.address===tk.address){ const nt = await call("token", tk.address).catch(()=>null); if (nt){ S.token = nt; renderTrade(nt, "sell"); } } }, 1500);
+        } catch(err){ busyBtn(b,false); $("#tErr").textContent = err.message; }
+        return; }
+      try { const q = await call("quote_sell", tk.address, pc); busyBtn(b,false); modalConfirm(q, "sell", tk); }
+      catch(err){ busyBtn(b,false); $("#tErr").textContent = err.message; } });
+  }
+}
+
+// =============== modálok ===============
+function modal(html){ $("#modal").innerHTML = html; $("#ov").classList.add("on"); }
+function closeModal(){ $("#ov").classList.remove("on"); clearInterval(S.timer); }
+$("#ov").addEventListener("click", e => { if (e.target.id === "ov" && !S.modalLocked) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !S.modalLocked) closeModal(); });
+
+function modalConfirm(q, side, tk){
+  const buy = side === "buy", high = buy && q.rug_level === 2;
+  modal(`<h2>${buy ? t("confirm_buy") : t("confirm_sell")}</h2><div class="sub">${esc(tk.name || tk.symbol)}</div>
+   <div class="box">
+     <div class="kv"><span>${t("you_pay")}</span><b class="num">${esc(q.pay)}${q.pay_usd ? ` <span class="muted">≈ ${fmtUsd(q.pay_usd)}</span>` : ""}</b></div>
+     <div class="kv"><span>${t("you_get")}</span><b class="num up">${esc(q.get)}</b></div>
+     <div class="kv"><span>${t("impact")}</span><b class="num ${q.impact>5?"down":""}">${q.impact.toFixed(2)}%</b></div>
+     <div class="kv"><span>${t("slippage")}</span><b class="num">${q.slippage.toFixed(2)}%</b></div>
+     <div class="kv"><span>${t("fees")}</span><b class="num">≈ ${q.fees_sol.toFixed(5)} SOL${q.gasless?t("sponsored"):""}</b></div>
+   </div>
+   ${q.impact > 5 ? `<div class="warnbox" style="margin-top:12px">${t("impact_warn")}</div>` : ""}
+   ${high ? `<div class="warnbox" style="margin-top:12px">${t("rug_type")}<div class="field" style="margin-top:8px;background:var(--bg2)"><input id="igen" autocomplete="off"></div></div>` : ""}
+   <div class="faint" style="font-size:12px;margin-top:12px" id="qTimer"></div><div class="err" id="cErr"></div>
+   <div class="mrow"><button class="btn" id="cNo">${t("cancel")}</button><button class="btn ${buy?"buy":"sell"} lg" id="cYes">${buy?t("buy"):t("sell")}</button></div>`);
+  const t0 = Date.now(); $("#cNo").onclick = closeModal;
+  const tick = () => { const left = q.valid_s - (Date.now()-t0)/1000; const ok = left > 0 && (!high || ($("#igen").value.trim().toUpperCase()===t("confirm_word")));
+    $("#cYes").disabled = !ok; $("#qTimer").textContent = left > 0 ? t("quote_left", {n: Math.ceil(left)}) : t("quote_expired"); };
+  tick(); S.timer = setInterval(tick, 400); if (high) $("#igen").addEventListener("input", tick);
+  $("#cYes").onclick = async () => { const b = $("#cYes"); busyBtn(b,true); clearInterval(S.timer);
+    try { const r = await call("execute", q.order_id, high ? $("#igen").value : "");
+      closeModal(); const link = r.signature ? "https://solscan.io/tx/" + r.signature : null;
+      if (r.success) toast(t(buy ? "bought" : "sold", {s: tk.symbol}), "ok", link, 9000); else toast(r.message, "bad", link, 12000);
+      setTimeout(async () => { await refreshPortfolio(); if (S.page==="token" && S.token) { const nt = await call("token", tk.address).catch(()=>null); if (nt){ S.token = nt; renderTrade(nt, side); } } }, 2500);
+    } catch(err){ busyBtn(b,false); $("#cErr").textContent = err.message; } };
+}
+function modalReceive(){
+  modal(`<h2>${t("receive_t")}</h2><div class="sub">${t("receive_p")}</div>
+   <div class="box addr-big">${esc(S.pub)}</div><div class="faint" style="font-size:12px;margin-top:8px">${t("receive_warn")}</div>
+   <div class="mrow"><button class="btn" id="mClose">${t("close")}</button><button class="btn pri" id="mCopy">${t("copy_addr")}</button></div>`);
+  $("#mClose").onclick = closeModal; $("#mCopy").onclick = () => copyText(S.pub, t("addr_copied"));
+}
+function modalBuySol(){
+  modal(`<h2>${t("buysol_t")}</h2><div class="sub">${t("buysol_sub")}</div>
+   <div class="steps"><div><b>1.</b> ${t("bs1")}</div><div><b>2.</b> ${t("bs2")}</div><div><b>3.</b> ${t("bs3",{a:esc(short(S.pub))})}</div><div><b>4.</b> ${t("bs4")}</div></div>
+   <div class="box" style="font-size:12.5px;color:var(--muted)">${t("bs_note")}</div>
+   <div class="mrow"><button class="btn" id="mClose">${t("cancel")}</button><button class="btn buy lg" id="mGo">${t("pay_card")}</button></div>`);
+  $("#mClose").onclick = closeModal;
+  $("#mGo").onclick = async () => { try { await call("open_moonpay"); closeModal(); toast(t("moonpay_opened"), "ok"); } catch(e){ toast(e.message, "bad"); } };
+}
+function modalSend(prefill){
+  modal(`<h2>${t("send_t")}</h2><div class="sub">${t("avail_x",{v:fmtAmt(S.port ? S.port.sol : 0)})}</div>
+   <div class="cap">${t("recipient")}</div><div class="field" style="margin-top:6px"><input id="sTo" class="mono" placeholder="7xKX…" autocomplete="off" spellcheck="false"><button class="btn sm" id="sPaste">${t("paste")}</button></div>
+   <div class="cap" style="margin-top:14px">${t("amount")}</div><div class="field" style="margin-top:6px"><input id="sAmt" class="num" inputmode="decimal" placeholder="0.00"><span class="unit">SOL</span><button class="btn sm" id="sMax">Max</button></div>
+   <div class="faint" style="font-size:12px;margin-top:8px">${t("fee_note")}</div><div class="err" id="sErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="sNo">${t("cancel")}</button><button class="btn pri lg" id="sGo">${t("next")}</button></div>`);
+  $("#sNo").onclick = closeModal;
+  if (typeof prefill === "string") { $("#sTo").value = prefill; $("#sAmt").focus(); } else $("#sTo").focus();
+  $("#sPaste").onclick = async () => { try { $("#sTo").value = (await navigator.clipboard.readText()).trim(); } catch(e){ toast(t("paste_ctrlv")); } };
+  $("#sMax").onclick = async () => { try { const r = await call("send_max"); $("#sAmt").value = +r.sol.toFixed(9); if (r.kept_for_tokens) $("#sErr").innerHTML = `<span class="faint">${t("kept_fee")}</span>`; } catch(e){ $("#sErr").textContent = e.message; } };
+  const go = async () => { const b = $("#sGo"); $("#sErr").textContent = ""; busyBtn(b,true);
+    try { const c = await call("send_check", $("#sTo").value, $("#sAmt").value); modalSendConfirm(c); } catch(err){ busyBtn(b,false); $("#sErr").textContent = err.message; } };
+  $("#sGo").onclick = go; onEnter($("#sAmt"), go);
+}
+function modalSendConfirm(c){
+  const sol = c.lamports/1e9;
+  modal(`<h2>${t("confirm_send")}</h2><div class="big-amt num" style="margin-top:10px">${fmtAmt(sol)} SOL</div><div class="muted num">${S.port ? "≈ " + fmtUsd(sol*S.port.sol_price) : ""}</div>
+   <div class="cap" style="margin-top:16px">${t("recipient_l")}</div><div class="box addr-big" style="margin-top:6px">${esc(c.to)}</div>
+   <div style="margin-top:8px;font-weight:650">${t("check_ends")}<span class="mono">${esc(c.to.slice(0,4))} … ${esc(c.to.slice(-4))}</span></div>
+   <div class="warnbox" style="margin-top:12px">${t("send_warn")}${c.new_addr ? "<br>" + t("new_addr_warn") : ""}</div>
+   <div class="err" id="sErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="sNo">${t("cancel")}</button><button class="btn pri lg" id="sGo">${t("send")}</button></div>`);
+  $("#sNo").onclick = closeModal;
+  $("#sGo").onclick = async () => { const b = $("#sGo"); busyBtn(b,true);
+    try { const r = await call("send", c.to, c.lamports); closeModal(); const link = "https://solscan.io/tx/" + r.signature;
+      r.confirmed ? toast(t("sent",{v:fmtAmt(sol), a:short(c.to)}), "ok", link, 9000) : toast(t("sent_pending"), "", link, 12000);
+      setTimeout(refreshPortfolio, 2000);
+    } catch(err){ busyBtn(b,false); $("#sErr").textContent = err.message; } };
+}
+function modalApiKey(){
+  modal(`<h2>${t("apikey_t")}</h2><div class="sub">${t("apikey_p")}</div>
+   <div class="steps"><div><b>1.</b> ${t("ak1")}</div><div><b>2.</b> ${t("ak2")}</div></div>
+   <button class="btn sm" id="portal">${t("open_portal")}</button>
+   <div class="cap" style="margin-top:16px">${t("s_jup")}</div><div class="field" style="margin-top:6px"><input id="jk" class="mono" value="${esc(S.prof.jup_key||"")}" autocomplete="off"></div>
+   <div class="err" id="stErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="stNo">${t("cancel")}</button><button class="btn pri" id="stGo">${t("save")}</button></div>`);
+  $("#portal").onclick = () => api.open_url("https://developers.jup.ag/portal"); $("#stNo").onclick = closeModal;
+  const go = async () => { try { await call("settings_save", $("#jk").value, S.prof.rpc || ""); S.prof.jup_key = $("#jk").value.trim(); closeModal(); toast(t("saved"), "ok"); } catch(e){ $("#stErr").textContent = e.message; } };
+  $("#stGo").onclick = go; onEnter($("#jk"), go);
+}
+function modalBackup(){
+  modal(`<h2>${t("backup_t")}</h2><div class="sub">${t("backup_pw_p")}</div>
+   <div class="field"><input id="bpw" type="password" placeholder="${esc(t("password"))}"></div><div class="err" id="bErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="bNo">${t("cancel")}</button><button class="btn pri" id="bGo">${t("show")}</button></div>`);
+  $("#bNo").onclick = closeModal; $("#bpw").focus();
+  const go = async () => { try { const r = await call("export_secret", $("#bpw").value);
+      modal(`<h2>${t("backup_t")}</h2><div class="sub">${t("your_secret")}</div>${secretView(r.secret)}<div class="mrow"><button class="btn pri" id="bOk">${t("done")}</button></div>`);
+      bindSecret(r.secret); $("#bOk").onclick = closeModal; } catch(e){ $("#bErr").textContent = e.message; } };
+  $("#bGo").onclick = go; onEnter($("#bpw"), go);
+}
+function modalAccount(mode, first, thenKey){
+  S.modalLocked = false;
+  const reg = mode !== "login", after = () => { if (thenKey) setTimeout(modalApiKey, 400); };
+  if (S.acct && !S.acct.configured){
+    modal(`<h2>${t("acc_reg_t")}</h2><div class="warnbox" style="background:var(--accSoft);color:var(--text)">${t("acc_not_conf")}</div>
+      <div class="mrow"><button class="btn" id="acNo">${t("close")}</button><button class="btn pri" id="acSet">${t("nav_settings")}</button></div>`);
+    $("#acNo").onclick = () => { closeModal(); after(); };
+    $("#acSet").onclick = () => { closeModal(); showPage("settings"); setTimeout(() => $("#sAcc") && $("#sAcc").scrollIntoView({block:"start"}), 400); };
+    return;
+  }
+  modal(`<h2>${t(reg ? "acc_reg_t" : "acc_login_t")}</h2><div class="sub">${t(reg ? "acc_reg_p" : "acc_login_p")}</div>
+   <div class="tabs" id="acTabs" style="margin-bottom:14px"><button data-m="register" class="${reg?"on":""}">${t("acc_reg")}</button><button data-m="login" class="${reg?"":"on"}">${t("acc_login")}</button></div>
+   <div class="cap">${t("s_email")}</div><div class="field" style="margin-top:6px"><input id="acEm" type="email" autocomplete="off" spellcheck="false" placeholder="you@example.com"></div>
+   ${reg ? `<div class="cap" style="margin-top:12px">${t("username")}</div><div class="field" style="margin-top:6px"><span class="unit">@</span><input id="acUn" maxlength="20" autocomplete="off" spellcheck="false" placeholder="username"></div><div class="faint" style="font-size:12px;margin-top:6px">${t("acc_un_hint")}</div>` : ""}
+   <div class="cap" style="margin-top:12px">${t("password")}</div><div class="field" style="margin-top:6px"><input id="acPw" type="password"></div>
+   ${reg ? `<div class="cap" style="margin-top:12px">${t("pw_again")}</div><div class="field" style="margin-top:6px"><input id="acPw2" type="password"></div>` : ""}
+   <div class="err" id="acErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="acNo">${first ? t("un_later") : t("cancel")}</button><button class="btn pri lg" id="acGo">${t(reg ? "acc_reg_go" : "acc_login_go")}</button></div>`);
+  $$("#acTabs [data-m]").forEach(b => b.onclick = () => modalAccount(b.dataset.m, first, thenKey));
+  $("#acNo").onclick = () => { closeModal(); after(); };
+  if ($("#acUn")) $("#acUn").addEventListener("input", e => { e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""); });
+  setTimeout(() => $("#acEm").focus(), 50);
+  const go = async () => { const b = $("#acGo"); if (b.disabled) return; $("#acErr").textContent = ""; busyBtn(b, true); S.modalLocked = true;
+    try { const em = $("#acEm").value;
+      const r = reg ? await call("acct_register", em, $("#acUn").value, $("#acPw").value, $("#acPw2").value) : await call("acct_login", em, $("#acPw").value);
+      S.modalLocked = false;
+      if (r.need_code) modalCode(r.email, after); else acctDone(r, after); }
+    catch(e){ S.modalLocked = false; busyBtn(b, false); $("#acErr").textContent = e.message; } };
+  $("#acGo").onclick = go; onEnter($(reg ? "#acPw2" : "#acPw"), go);
+}
+function modalCode(email, after){
+  modal(`<h2>${t("acc_code_t")}</h2><div class="sub">${t("acc_code_p", {e: esc(email)})}</div>
+   <div class="field"><input id="acCode" class="num" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••" style="font-size:28px;letter-spacing:12px;text-align:center"></div>
+   <div class="faint" style="font-size:12px;margin-top:8px">${t("acc_code_hint")}</div>
+   <div class="err" id="acErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="acResend">${t("acc_resend")}</button><button class="btn pri lg" id="acGo" disabled>${t("acc_verify")}</button></div>`);
+  const inp = $("#acCode"); setTimeout(() => inp.focus(), 50);
+  let wait = 60; const btn = $("#acResend");
+  const cd = () => { if (!btn.isConnected){ clearInterval(S.timer); return; } btn.disabled = wait > 0; btn.textContent = wait > 0 ? t("acc_resend_wait", {n: wait}) : t("acc_resend"); wait--; };
+  clearInterval(S.timer); cd(); S.timer = setInterval(cd, 1000);
+  btn.onclick = async () => { $("#acErr").textContent = ""; try { await call("acct_resend", email); toast(t("acc_resent"), "ok", null, 3000); wait = 60; cd(); } catch(e){ $("#acErr").textContent = e.message; } };
+  const go = async () => { const b = $("#acGo"); if (b.disabled) return; $("#acErr").textContent = ""; busyBtn(b, true); S.modalLocked = true;
+    try { const r = await call("acct_verify", email, inp.value); S.modalLocked = false; acctDone(r, after); }
+    catch(e){ S.modalLocked = false; busyBtn(b, false); b.disabled = inp.value.length !== 6; $("#acErr").textContent = e.message; inp.select(); } };
+  inp.addEventListener("input", () => { inp.value = inp.value.replace(/\D/g, "").slice(0, 6); $("#acGo").disabled = inp.value.length !== 6; if (inp.value.length === 6) go(); });
+  $("#acGo").onclick = go; onEnter(inp, go);
+}
+async function acctDone(r, after){
+  clearInterval(S.timer); closeModal();
+  S.prof = await call("profile_get").catch(() => S.prof); S.acct = await call("acct_status").catch(() => S.acct);
+  updateMe(); toast(t("welcome_user", {u: r.username}), "ok");
+  if (S.page === "friends") loadFriends(); if (S.page === "settings") renderSettings();
+  if (after) after();
+}
+
+// =============== barátok ===============
+const walletCache = {};
+async function loadFriends(){
+  if (S.prof.username){
+    const inv = await call("invite_code").catch(() => null);
+    $("#inviteCard").innerHTML = `${personAv(S.prof.username, S.pub, "lg", S.prof.avatar)}<div style="flex:1;min-width:220px"><div class="cap">${t("invite_code")}</div><div style="font-weight:650;margin:4px 0 2px">@${esc(S.prof.username)}</div><div class="muted" style="font-size:12.5px">${t("invite_p")}</div></div>
+      <div class="code">${esc(inv ? inv.code : "")}</div><button class="btn pri" id="invCopy">${t("copy")}</button>`;
+    $("#invCopy").onclick = () => inv && copyText(inv.code);
+  } else {
+    $("#inviteCard").innerHTML = `<div style="flex:1"><div style="font-weight:700;font-size:16px">${t("no_username")}</div><div class="muted" style="font-size:13px;margin-top:4px">${t("no_username_p")}</div></div><button class="btn pri" id="invMake">${t("create_account")}</button>`;
+    $("#invMake").onclick = () => modalAccount("register");
+  }
+  const fr = (await call("friends_list").catch(() => ({items:[]}))).items;
+  if (!fr.length){ $("#flist").innerHTML = `<div class="card empty" style="grid-column:1/-1">${t("no_friends")}</div>`; return; }
+  $("#flist").innerHTML = fr.map(f => `<div class="card fcard" data-addr="${esc(f.address)}">
+     <div class="tk">${personAv(f.name, f.address)}<div style="min-width:0"><b>@${esc(f.name)}</b><small class="mono">${esc(short(f.address))}</small></div></div>
+     <div><div class="cap">${t("wallet_value")}</div><div class="tot num" data-tot><span class="skel" style="display:inline-block;width:110px;height:24px"></span></div></div>
+     <div style="display:flex;align-items:center;justify-content:space-between"><div class="stack-av" data-logos></div><span class="muted" style="font-size:12.5px" data-cnt></span></div></div>`).join("");
+  $$("#flist .fcard").forEach(c => c.onclick = () => openWallet(c.dataset.addr, "friends"));
+  for (const f of fr){
+    const card = $(`#flist .fcard[data-addr="${CSS.escape(f.address)}"]`); if (!card) continue;
+    try { const w = walletCache[f.address] && Date.now() - walletCache[f.address].t < 60000 ? walletCache[f.address].w : await call("wallet_view", f.address);
+      walletCache[f.address] = {w, t: Date.now()};
+      const held = w.items.filter(x => x.amount > 0);
+      card.querySelector("[data-tot]").innerHTML = `${fmtUsd(w.total)} <span style="font-size:13px">${w.total ? pct(w.change_pct) : ""}</span>`;
+      card.querySelector("[data-logos]").innerHTML = held.slice(0,5).map(x => avatar(x, "sm")).join("");
+      card.querySelector("[data-cnt]").textContent = t("coins_n", {n: held.length});
+    } catch(e){ card.querySelector("[data-tot]").innerHTML = `<span class="muted" style="font-size:13px">${esc(e.message)}</span>`; }
+  }
+}
+$("#addFriendBtn").onclick = () => modalAddFriend();
+function modalAddFriend(prefill){
+  modal(`<h2>${t("add_friend_t")}</h2><div class="sub">${t("add_friend_p")}</div>
+   <div class="cap">${t("af_l1")}</div><div class="field" style="margin-top:6px"><input id="fT" class="mono" placeholder="@friend/7xKX…  ·  name.sol" value="${esc(prefill||"")}" autocomplete="off" spellcheck="false"></div>
+   <div class="cap" style="margin-top:14px">${t("af_l2")}</div><div class="field" style="margin-top:6px"><span class="unit">@</span><input id="fN" maxlength="24" autocomplete="off"></div>
+   <div class="err" id="fErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="fNo">${t("cancel")}</button><button class="btn pri lg" id="fGo">${t("add")}</button></div>`);
+  $("#fNo").onclick = closeModal; setTimeout(() => (prefill ? $("#fN") : $("#fT")).focus(), 50);
+  const go = async () => { const b = $("#fGo"); $("#fErr").textContent = ""; busyBtn(b,true);
+    try { const f = await call("friend_add", $("#fT").value, $("#fN").value); closeModal(); toast(t("friend_added",{n:f.name}), "ok");
+      if (S.page === "wallet") openWallet(f.address, S.wback); else showPage("friends"); }
+    catch(err){ busyBtn(b,false); $("#fErr").textContent = err.message; } };
+  $("#fGo").onclick = go; onEnter($("#fT"), go); onEnter($("#fN"), go);
+}
+
+// =============== tárcaoldal ===============
+async function openWallet(addr, back){
+  S.wallet = addr; S.wback = back || S.page; showPage("wallet");
+  $("#walletBody").innerHTML = `<div class="whead"><div class="av lg skel"></div><div><div class="skel" style="width:200px;height:26px"></div><div class="skel" style="width:120px;height:16px;margin-top:8px"></div></div></div><div class="card skel" style="height:300px"></div>`;
+  let w; try { w = await call("wallet_view", addr); walletCache[addr] = {w, t: Date.now()}; }
+  catch(e){ $("#walletBody").innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return; }
+  if (w.is_me){ showPage("home"); return; }
+  const f = w.friend, name = f ? "@" + f.name : (S.wname || t("wallet_lbl")); S.wname = null;
+  $("#walletBody").innerHTML = `
+   <div class="whead">${personAv(f ? f.name : name, addr, "lg")}<div><h1>${esc(name)}</h1>
+     <span class="chip mono" style="cursor:pointer;margin-top:6px" id="wAddr">${esc(short(addr))} ⧉</span></div>
+     <div class="links">${f ? `<button class="btn" id="wRem">${t("remove")}</button>` : `<button class="btn pri" id="wAdd">${t("add_as_friend")}</button>`}<button class="btn buy" id="wSend">${t("send_sol")}</button></div></div>
+   <div class="card" style="margin-bottom:16px"><div class="cap">${t("wallet_value")}</div><div style="display:flex;align-items:baseline;gap:12px;margin-top:6px"><span class="wtot num">${fmtUsd(w.total)}</span>${w.total ? pct(w.change_pct) : ""}</div>
+     <div class="muted num" style="margin-top:2px">${fmtAmt(w.sol)} SOL · ${t("coins_n",{n:w.items.filter(x=>x.amount>0).length})}</div></div>
+   <div class="card" style="padding:12px"><div class="list" id="wAssets"></div></div>
+   <div class="faint" style="font-size:12px;margin-top:12px">${t("public_note")}</div>`;
+  renderAssets($("#wAssets"), w.items, false);
+  $("#wAddr").onclick = () => copyText(addr, t("addr_copied"));
+  $("#wSend").onclick = () => modalSend(addr);
+  if (f) $("#wRem").onclick = async () => { await call("friend_remove", addr); toast(t("removed",{n:f.name})); showPage("friends"); };
+  else $("#wAdd").onclick = () => modalAddFriend(addr);
+}
+
+// =============== globális kereső ===============
+let gTimer = null, gSel = -1, gItems = [];
+function gClose(){ $("#gres").classList.remove("on"); gSel = -1; }
+function gRender(r, q){
+  gItems = []; let html = "";
+  const add = (fn, inner) => { gItems.push(fn); return `<div class="it" data-i="${gItems.length-1}">${inner}</div>`; };
+  if (r.friends && r.friends.length) html += `<h6>${t("friends_h")}</h6>` + r.friends.map(f => add(() => openWallet(f.address, S.page),
+      `${personAv(f.name, f.address, "sm")}<div class="tk"><div><b>@${esc(f.name)}</b><small class="mono">${esc(short(f.address))}</small></div></div>`)).join("");
+  if (r.coins && r.coins.length) html += `<h6>${t("coins_h")}</h6>` + r.coins.map(tk => add(() => openToken(tk.address, S.page === "token" ? (S.back || "market") : S.page),
+      `${avatar(tk, "sm")}<div class="tk" style="min-width:0"><div style="min-width:0"><b>${esc(tk.name || tk.symbol)}</b><small>${esc(tk.symbol)}</small></div></div><div class="rt num"><div style="font-weight:650">${fmtPrice(tk.price)}</div>${pct(tk.change24h||0)}</div>`)).join("");
+  if (r.wallets && r.wallets.length) html += `<h6>${t("wallet_h")}</h6>` + r.wallets.map(w => add(() => { S.wname = w.name; openWallet(w.address, S.page); },
+      `${personAv(w.name || "?", w.address, "sm")}<div class="tk"><div><b>${esc(w.name || t("view_wallet"))}</b><small class="mono">${esc(short(w.address))}</small></div></div><div class="rt muted" style="font-size:12.5px">${t("view_arrow")}</div>`)).join("");
+  if (!html) html = `<div class="note">${esc(r.note || (q.startsWith("@") ? t("no_friend_named") : t("no_results")))}</div>`;
+  $("#gres").innerHTML = html; $("#gres").classList.add("on"); gSel = -1;
+  $$("#gres .it").forEach(el => el.onclick = () => { const fn = gItems[+el.dataset.i]; gClose(); $("#gq").value = ""; $("#gq").blur(); fn(); });
+}
+$("#gq").addEventListener("input", () => { clearTimeout(gTimer); const q = $("#gq").value.trim();
+  if (!q){ gClose(); return; }
+  $("#gres").innerHTML = `<div class="note">${t("searching")}</div>`; $("#gres").classList.add("on");
+  gTimer = setTimeout(async () => { try { const r = await call("search_all", q); if ($("#gq").value.trim() === q) gRender(r, q); } catch(e){ $("#gres").innerHTML = `<div class="note">${esc(e.message)}</div>`; } }, 380); });
+$("#gq").addEventListener("keydown", e => {
+  const its = $$("#gres .it");
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){ if (!its.length) return; e.preventDefault(); gSel = (gSel + (e.key === "ArrowDown" ? 1 : -1) + its.length) % its.length; its.forEach((x,i) => x.classList.toggle("sel", i === gSel)); }
+  else if (e.key === "Enter"){ const el = its[gSel >= 0 ? gSel : 0]; if (el) el.click(); }
+  else if (e.key === "Escape"){ gClose(); $("#gq").blur(); }
+});
+$("#gq").addEventListener("focus", () => { if ($("#gq").value.trim() && $("#gres").innerHTML) $("#gres").classList.add("on"); });
+document.addEventListener("mousedown", e => { if (!e.target.closest(".gsearch")) gClose(); });
+
+
+// =============== Bitcoin ===============
+const CBBTC = "cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij";   // a BTC árfolyam-grafikonhoz
+function fmtBtc(sats){ return (Math.abs(sats||0)/1e8).toFixed(8).replace(/\.?0+$/,"") || "0"; }
+async function loadBtc(){
+  S.btcTf = S.btcTf || "24ó";
+  tfTabs($("#btcTf"), S.btcTf, tf => { S.btcTf = tf; loadChart(CBBTC, tf, $("#btcChart"), $("#btcChartMsg")); });
+  loadChart(CBBTC, S.btcTf, $("#btcChart"), $("#btcChartMsg"));
+  if (S.btc) renderBtc(S.btc);
+  loadSwaps();
+  await loadBtcInfo(true);
+}
+async function loadBtcInfo(show){
+  const seq = S.btcSeq = (S.btcSeq || 0) + 1;
+  try { const b = await call("btc_info"); if (S.locked) return;
+    const old = S.btc; S.btc = b;
+    if (old && old.address === b.address && b.balance > old.balance) toast("✓ +" + fmtBtc(b.balance - old.balance) + " BTC", "ok");
+    if (S.page === "btc" && seq === S.btcSeq) renderBtc(b); }
+  catch(e){ if (S.page !== "btc" || seq !== S.btcSeq) return;
+    if (!S.btc){ $("#btcTotal").textContent = "–";
+      $("#btcTxs").innerHTML = `<div class="empty">${esc(t("btc_err"))}<br><span class="faint">${esc(e.message)}</span><br><button class="btn sm" id="btcRetry" style="margin-top:12px">${esc(t("retry"))}</button></div>`;
+      $("#btcRetry").onclick = () => loadBtcInfo(true); }
+    else if (show) toast(e.message, "bad"); }
+}
+function renderBtc(b){
+  $("#btcTotal").textContent = fmtBtc(b.balance) + " BTC";
+  $("#btcUsd").textContent = b.price ? "≈ " + fmtUsd(b.balance/1e8*b.price) : "";
+  $("#btcPend").innerHTML = b.pending ? `<span class="pill flat num">${esc(t(b.pending > 0 ? "btc_pending" : "btc_pending_out", {v: (b.pending < 0 ? "-" : "") + fmtBtc(b.pending)}))}</span>` : "";
+  $("#btcPrice").textContent = b.price ? fmtPrice(b.price) : "–";
+  $("#btcAddr").textContent = b.address;
+  const loc = LANG === "hu" ? "hu-HU" : "en-US";
+  $("#btcTxs").innerHTML = b.txs.length ? b.txs.map((x, i) => `<div class="row" data-tx="${i}" style="grid-template-columns:minmax(180px,1.4fr) 1fr 1fr 1fr">
+      <div class="tk"><div class="av sm" style="background:${x.net >= 0 ? "var(--upSoft)" : "var(--downSoft)"};color:${x.net >= 0 ? "var(--up)" : "var(--down)"}">${x.net >= 0 ? "↓" : "↑"}</div>
+        <div><b>${esc(t(x.net >= 0 ? "btc_in" : "btc_out"))}</b><small class="mono">${esc(short(x.txid))}</small></div></div>
+      <div class="num ${x.net >= 0 ? "up" : "down"}" style="font-weight:700">${x.net >= 0 ? "+" : "−"}${fmtBtc(x.net)} BTC</div>
+      <div class="num muted">${b.price ? fmtUsd(Math.abs(x.net)/1e8*b.price) : ""}</div>
+      <div>${x.confirmed ? `<span class="muted" style="font-size:12.5px">${x.time ? esc(new Date(x.time*1000).toLocaleString(loc,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})) : esc(t("btc_conf"))}</span>` : `<span class="pill flat">${esc(t("btc_unconf"))}</span>`}</div></div>`).join("")
+    : `<div class="empty">${esc(t("btc_notx"))}</div>`;
+  $$("#btcTxs [data-tx]").forEach(r => r.onclick = () => api.open_url("https://mempool.space/tx/" + b.txs[+r.dataset.tx].txid));
+}
+$("#btcRefresh").onclick = () => { loadBtcInfo(true); delete chartCache[CBBTC + "|" + S.btcTf]; loadChart(CBBTC, S.btcTf, $("#btcChart"), $("#btcChartMsg")); };
+$("#btcCopy").onclick = () => S.btc && copyText(S.btc.address, t("addr_copied"));
+setInterval(() => { if (S.page === "btc" && !S.locked && document.visibilityState === "visible") loadBtcInfo(false); }, 30000);
+setInterval(() => { if (!S.locked && S.swapsActive && document.visibilityState === "visible") loadSwaps(); }, 20000);
+
+function modalBtcReceive(){
+  if (!S.btc) return toast(t("btc_err"), "bad");
+  modal(`<h2>${t("btc_recv_t")}</h2><div class="sub">${t("btc_recv_p")}</div>
+   <div class="box addr-big">${esc(S.btc.address)}</div><div class="warnbox" style="margin-top:12px">${t("btc_recv_warn")}</div>
+   <div class="mrow"><button class="btn" id="mClose">${t("close")}</button><button class="btn pri" id="mCopy">${t("copy_addr")}</button></div>`);
+  $("#mClose").onclick = closeModal; $("#mCopy").onclick = () => copyText(S.btc.address, t("addr_copied"));
+}
+function modalBtcSend(){
+  if (!S.btc) return toast(t("btc_err"), "bad");
+  S.btcFee = S.btcFee || "normal";
+  modal(`<h2>${t("btc_send_t")}</h2><div class="sub">${t("btc_avail",{v:fmtBtc(S.btc.balance)})}</div>
+   <div class="cap">${t("recipient")}</div><div class="field" style="margin-top:6px"><input id="bTo" class="mono" placeholder="bc1…" autocomplete="off" spellcheck="false"><button class="btn sm" id="bPaste">${t("paste")}</button></div>
+   <div class="cap" style="margin-top:14px">${t("amount")}</div><div class="field" style="margin-top:6px"><input id="bAmt" class="num" inputmode="decimal" placeholder="0.00000000" autocomplete="off"><span class="unit">BTC</span><button class="btn sm" id="bMax">Max</button></div>
+   <div class="faint" id="bUsd" style="font-size:12px;margin-top:6px;min-height:15px"></div>
+   <div class="cap" style="margin-top:12px">${t("btc_fee")}</div><div class="tabs" id="bFee" style="margin-top:6px">${["fast","normal","slow"].map(k => `<button data-fee="${k}" class="${k===S.btcFee?"on":""}">${t("fee_"+k)}</button>`).join("")}</div>
+   <div class="faint" id="bRates" style="font-size:12px;margin-top:6px;min-height:15px"></div>
+   <div class="err" id="bErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="bNo">${t("cancel")}</button><button class="btn pri lg" id="bGo">${t("next")}</button></div>`);
+  let isMax = false;
+  $("#bNo").onclick = closeModal; $("#bTo").focus();
+  $("#bPaste").onclick = async () => { try { $("#bTo").value = (await navigator.clipboard.readText()).trim(); } catch(e){ toast(t("paste_ctrlv")); } };
+  const usd = () => { const v = parseFloat($("#bAmt").value.replace(",", "."));
+    $("#bUsd").textContent = isMax ? t("btc_max_note") : (v > 0 && S.btc.price ? "≈ " + fmtUsd(v * S.btc.price) : ""); };
+  $("#bAmt").addEventListener("input", () => { isMax = false; usd(); });
+  $("#bMax").onclick = () => { isMax = true; $("#bAmt").value = fmtBtc(S.btc.balance); usd(); };
+  $$("#bFee [data-fee]").forEach(b => b.onclick = () => { S.btcFee = b.dataset.fee; $$("#bFee [data-fee]").forEach(x => x.classList.toggle("on", x === b)); });
+  call("btc_fees").then(r => { if ($("#bRates")) $("#bRates").textContent = t("btc_rates", {f:r.fast, n:r.normal, s:r.slow}); }).catch(() => {});
+  const go = async () => { const b = $("#bGo"); $("#bErr").textContent = ""; busyBtn(b,true);
+    try { const c = await call("btc_send_check", $("#bTo").value, $("#bAmt").value, S.btcFee, isMax); modalBtcConfirm(c); }
+    catch(err){ busyBtn(b,false); $("#bErr").textContent = err.message; } };
+  $("#bGo").onclick = go; onEnter($("#bAmt"), go);
+}
+function modalBtcConfirm(c){
+  const usd = v => c.price ? ` <span class="muted">≈ ${fmtUsd(v/1e8*c.price)}</span>` : "";
+  modal(`<h2>${t("btc_confirm")}</h2><div class="big-amt num" style="margin-top:10px">${fmtBtc(c.amount)} BTC</div><div class="muted num">${c.price ? "≈ " + fmtUsd(c.amount/1e8*c.price) : ""}</div>
+   <div class="cap" style="margin-top:16px">${t("recipient_l")}</div><div class="box addr-big" style="margin-top:6px">${esc(c.to)}</div>
+   <div style="margin-top:8px;font-weight:650">${t("check_ends")}<span class="mono">${esc(c.to.slice(0,4))} … ${esc(c.to.slice(-4))}</span></div>
+   <div class="box" style="margin-top:12px">
+     <div class="kv"><span>${t("btc_fee_l")}</span><b class="num">${fmtBtc(c.fee)} BTC${usd(c.fee)} · ${c.rate} sat/vB</b></div>
+     <div class="kv"><span>${t("btc_total")}</span><b class="num">${fmtBtc(c.amount + c.fee)} BTC${usd(c.amount + c.fee)}</b></div></div>
+   ${c.fee > c.amount * 0.1 ? `<div class="warnbox" style="margin-top:12px">${t("btc_fee_high")}</div>` : ""}
+   ${c.self ? `<div class="warnbox" style="margin-top:12px">${t("btc_self")}</div>` : ""}
+   <div class="warnbox" style="margin-top:12px">${t("send_warn")}</div>
+   <div class="faint" style="font-size:12px;margin-top:12px" id="qTimer"></div><div class="err" id="bErr"></div>
+   <div class="mrow"><button class="btn" id="bNo">${t("cancel")}</button><button class="btn pri lg" id="bGo">${t("send")}</button></div>`);
+  const t0 = Date.now(); $("#bNo").onclick = closeModal;
+  const tick = () => { const left = c.valid_s - (Date.now()-t0)/1000; $("#bGo").disabled = left <= 0;
+    $("#qTimer").textContent = left > 0 ? t("quote_left", {n: Math.ceil(left)}) : t("quote_expired"); };
+  tick(); S.timer = setInterval(tick, 500);
+  $("#bGo").onclick = async () => { const b = $("#bGo"); busyBtn(b,true); clearInterval(S.timer);
+    try { const r = await call("btc_send", c.id); closeModal();
+      toast(t("btc_sent"), "ok", "https://mempool.space/tx/" + r.txid, 12000); setTimeout(() => loadBtcInfo(false), 3000); }
+    catch(err){ busyBtn(b,false); $("#bErr").textContent = err.message; } };
+}
+function modalBtcKey(){
+  modal(`<h2>${t("btc_key_t")}</h2><div class="sub">${t("backup_pw_p")}</div>
+   <div class="field"><input id="bpw" type="password" placeholder="${esc(t("password"))}"></div><div class="err" id="bErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="bNo">${t("cancel")}</button><button class="btn pri" id="bGo">${t("show")}</button></div>`);
+  $("#bNo").onclick = closeModal; $("#bpw").focus();
+  const go = async () => { try { const r = await call("btc_export", $("#bpw").value);
+      modal(`<h2>${t("btc_key_t")}</h2><div class="sub mono">${esc(r.address)}</div>${secretView(r.wif)}<div class="faint" style="font-size:12px;margin-top:10px">${t("btc_key_note")}</div><div class="mrow"><button class="btn pri" id="bOk">${t("done")}</button></div>`);
+      bindSecret(r.wif); $("#bOk").onclick = closeModal; } catch(e){ $("#bErr").textContent = e.message; } };
+  $("#bGo").onclick = go; onEnter($("#bpw"), go);
+}
+
+
+// =============== csere: BTC ↔ Solana coinok ===============
+async function loadSwaps(){
+  let list; try { list = await call("xswap_list"); } catch(e){ return; }
+  const prev = S.swapSt || {}; S.swapSt = {};
+  list.forEach(x => { S.swapSt[x.deposit] = x.status;
+    if (prev[x.deposit] && prev[x.deposit] !== "SUCCESS" && x.status === "SUCCESS"){ toast(t("xs_done", {v: (x.got || x.get) + " " + x.sym_out}), "ok", x.out_link || x.link, 10000); refreshPortfolio(); loadBtcInfo(false); } });
+  S.swapsActive = list.some(x => !["SUCCESS","REFUNDED","FAILED"].includes(x.status));
+  if (!$("#xsCard")) return;
+  $("#xsCard").style.display = list.length ? "" : "none";
+  const loc = LANG === "hu" ? "hu-HU" : "en-US";
+  $("#xsList").innerHTML = list.map((x, i) => { const ok = x.status === "SUCCESS", bad = ["REFUNDED","FAILED","INCOMPLETE_DEPOSIT"].includes(x.status);
+    return `<div class="row" data-xs="${i}" style="grid-template-columns:minmax(200px,1.6fr) 1fr 1fr">
+      <div class="tk"><div class="av sm" style="background:var(--accSoft);color:var(--acc)">⇄</div><div><b class="num">${esc(x.pay)} ${esc(x.sym_in)} → ${ok && x.got ? "" : "≈ "}${esc(x.got || x.get || "?")} ${esc(x.sym_out)}</b>
+        <small>${esc(new Date(x.time*1000).toLocaleString(loc,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}))}${x.refund_reason ? " · " + esc(x.refund_reason) : ""}</small></div></div>
+      <div><span class="pill ${ok ? "up" : bad ? "down" : "flat"}">${!ok && !bad ? '<span class="spin" style="width:10px;height:10px;border-width:2px"></span> ' : ""}${esc(t("xs_" + x.status) || x.status)}</span></div>
+      <div class="muted" style="font-size:12.5px">${!ok && !bad && x.eta ? esc(t("xs_minutes", {n: Math.max(1, Math.round(x.eta/60))})) : ""}</div></div>`; }).join("");
+  $$("#xsList [data-xs]").forEach(r => r.onclick = () => { const x = list[+r.dataset.xs]; api.open_url(x.out_link || x.link); });
+}
+async function modalXswap(dir){
+  if (!S.btc) await loadBtcInfo(false);
+  const b2s = dir === "btc2sol";
+  modal(`<h2>${t("xs_t")}</h2><div class="sub">${t("xs_sub")}</div>
+   <div class="tabs" id="xsDir" style="margin-bottom:14px"><button data-d="btc2sol" class="${b2s?"on":""}">${t("xs_btc2sol")}</button><button data-d="sol2btc" class="${b2s?"":"on"}">${t("xs_sol2btc")}</button></div>
+   <div class="cap">${t("xs_pay")}</div><div class="field" style="margin-top:6px"><input id="xAmt" class="num" inputmode="decimal" placeholder="${b2s ? "0.00000000" : "0.00"}" autocomplete="off"><span class="unit">${b2s ? "BTC" : "SOL"}</span><button class="btn sm" id="xMax">Max</button></div>
+   <div class="faint" style="font-size:12px;margin-top:6px">${t(b2s ? "btc_avail" : "avail_x", {v: b2s ? fmtBtc(S.btc ? S.btc.balance : 0) : fmtAmt(S.port ? S.port.sol : 0)})}</div>
+   <div class="cap" style="margin-top:14px">${t("xs_get")}</div>
+   ${b2s ? `<div class="field" style="margin-top:6px"><select id="xTo" style="flex:1;background:transparent;border:0;color:var(--text);font:inherit;padding:11px 0;outline:none"><option>…</option></select></div><div class="faint" style="font-size:12px;margin-top:6px">${t("xs_other")}</div>
+     <div class="cap" style="margin-top:14px">${t("btc_fee")}</div><div class="tabs" id="xFee" style="margin-top:6px">${["fast","normal","slow"].map(k => `<button data-fee="${k}" class="${k===(S.btcFee||"normal")?"on":""}">${t("fee_"+k)}</button>`).join("")}</div>`
+        : `<div class="box" style="margin-top:6px;display:flex;align-items:center;gap:10px"><div class="av sm" style="background:#f7931a">₿</div><b>Bitcoin (BTC)</b><span class="faint mono" style="margin-left:auto;font-size:12px">${esc(S.btc ? short(S.btc.address) : "")}</span></div>`}
+   <div id="xPrev"></div><div class="err" id="xErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="xNo">${t("cancel")}</button><button class="btn pri lg" id="xGo">${t("xs_quote")}</button></div>`);
+  $$("#xsDir [data-d]").forEach(b => b.onclick = () => modalXswap(b.dataset.d));
+  $("#xNo").onclick = closeModal; $("#xAmt").focus();
+  let isMax = false, q = null;
+  const reset = () => { q = null; $("#xPrev").innerHTML = ""; $("#xGo").textContent = t("xs_quote"); $("#xGo").className = "btn pri lg"; clearInterval(S.timer); };
+  $("#xAmt").addEventListener("input", () => { isMax = false; reset(); });
+  $("#xMax").onclick = async () => { reset();
+    if (b2s){ isMax = true; $("#xAmt").value = fmtBtc(S.btc ? S.btc.balance : 0); }
+    else { try { const r = await call("send_max"); $("#xAmt").value = Math.max(0, +(r.sol - 0.001).toFixed(6)); } catch(e){ $("#xErr").textContent = e.message; } } };
+  if (b2s){
+    S.btcFee = S.btcFee || "normal";
+    $$("#xFee [data-fee]").forEach(b => b.onclick = () => { S.btcFee = b.dataset.fee; $$("#xFee [data-fee]").forEach(x => x.classList.toggle("on", x === b)); reset(); });
+    try { const toks = S.xsToks || (S.xsToks = await call("xswap_tokens"));
+      $("#xTo").innerHTML = toks.map(tk => `<option value="${esc(tk.asset)}" style="background:#12151d">${esc(tk.symbol)}${tk.asset.includes("sol.omft") && tk.symbol === "SOL" ? " – Solana" : ""}</option>`).join("");
+      $("#xTo").onchange = reset; }
+    catch(e){ $("#xErr").textContent = e.message; }
+  }
+  const asset = () => b2s ? $("#xTo").value : "nep141:btc.omft.near";
+  $("#xGo").onclick = async () => { const b = $("#xGo"); $("#xErr").textContent = "";
+    if (!q){ busyBtn(b, true);
+      try { q = await call("xswap_quote", dir, asset(), $("#xAmt").value, S.btcFee || "normal", b2s && isMax); busyBtn(b, false); showQuote(q); }
+      catch(e){ busyBtn(b, false); $("#xErr").textContent = e.message; } return; }
+    busyBtn(b, true); clearInterval(S.timer); S.modalLocked = true;
+    try { const r = await call("xswap_execute", q.direction, q.asset, q.amount, q.rate); S.modalLocked = false; closeModal();
+      toast(t("xs_started"), "ok", r.link, 10000); S.swapsActive = true; loadSwaps(); setTimeout(() => { loadBtcInfo(false); refreshPortfolio(); }, 3000); }
+    catch(e){ S.modalLocked = false; busyBtn(b, false); $("#xErr").textContent = e.message; } };
+  function showQuote(q){
+    $("#xPrev").innerHTML = `<div class="box" style="margin-top:14px">
+      <div class="kv"><span>${t("xs_pay")}</span><b class="num">${esc(q.pay)}${q.pay_usd ? ` <span class="muted">≈ ${fmtUsd(q.pay_usd)}</span>` : ""}</b></div>
+      <div class="kv"><span>${t("xs_get")}</span><b class="num up">≈ ${esc(q.get)} ${esc(q.symbol_out)}${q.get_usd ? ` <span class="muted">≈ ${fmtUsd(q.get_usd)}</span>` : ""}</b></div>
+      <div class="kv"><span>${t("xs_min")}</span><b class="num">${esc(fmtAmt(q.min_get))} ${esc(q.symbol_out)}</b></div>
+      <div class="kv"><span>${t("xs_netfee")}</span><b class="num">${esc(q.net_fee)}${q.rate ? " · " + q.rate + " sat/vB" : ""}</b></div>
+      <div class="kv"><span>${t("xs_service")}</span><b>${t("xs_service_v")}</b></div>
+      <div class="kv"><span>${t("xs_time")}</span><b>${q.time ? esc(t("xs_minutes", {n: Math.max(1, Math.round(q.time/60))})) : "–"}</b></div></div>
+      <div class="warnbox" style="margin-top:12px;background:var(--accSoft);color:var(--text)">${t(b2s ? "xs_warn" : "xs_warn2")}</div>
+      <div class="faint" style="font-size:12px;margin-top:10px" id="qTimer"></div>`;
+    const go = $("#xGo"); go.textContent = t("xs_go"); go.className = "btn buy lg";
+    const t0 = Date.now(), tick = () => { const left = 60 - (Date.now()-t0)/1000;
+      if (left <= 0){ reset(); $("#xErr").textContent = t("quote_expired"); return; }
+      $("#qTimer").textContent = t("quote_left", {n: Math.ceil(left)}); };
+    tick(); S.timer = setInterval(tick, 500);
+  }
+}
+
+// =============== kijelentkezés ===============
+function modalLogout(){
+  modal(`<h2>${t("logout_t")}</h2><div class="warnbox">${t("logout_p")}</div>
+   <button class="btn sm" id="loKey" style="margin-top:12px">${t("show_key")}</button>
+   <div class="cap" style="margin-top:16px">${t("password")}</div><div class="field" style="margin-top:6px"><input id="lopw" type="password"></div>
+   <label style="display:flex;gap:10px;align-items:center;margin-top:14px;cursor:pointer"><input type="checkbox" id="loSaved"> <span>${t("logout_saved")}</span></label>
+   <div class="err" id="loErr" style="margin-top:8px"></div>
+   <div class="mrow"><button class="btn" id="loNo">${t("cancel")}</button><button class="btn sell lg" id="loGo" disabled>${t("logout_go")}</button></div>`);
+  $("#loNo").onclick = closeModal; $("#loKey").onclick = modalBackup;
+  $("#loSaved").addEventListener("change", e => { $("#loGo").disabled = !e.target.checked; });
+  const go = async () => { const b = $("#loGo"); if (b.disabled) return; busyBtn(b,true);
+    try { await call("logout", $("#lopw").value); closeModal(); stopLive();
+      Object.assign(S, {pub:null, port:null, btc:null, token:null, wallet:null, prof:{}, locked:true, page:"home"});
+      gateWelcome(); setTimeout(() => toast(t("logged_out"), "ok", null, 8000), 100); }
+    catch(e){ busyBtn(b,false); $("#loErr").textContent = e.message; } };
+  $("#loGo").onclick = go; onEnter($("#lopw"), go);
+}
+
+// =============== beállítások ===============
+function setRow(lbl, desc, ctl, id=""){ return `<div class="set-row"${id?` id="${id}"`:""}><div class="lbl"><b>${lbl}</b><small>${desc}</small></div><div class="set-ctl">${ctl}</div></div>`; }
+async function renderSettings(){
+  S.prof = await call("profile_get").catch(() => S.prof);
+  S.acct = await call("acct_status").catch(() => S.acct);
+  const P = S.prof, al = +(P.autolock ?? 15);
+  $("#setBody").innerHTML = `
+   <div class="card set-sec" id="sProfile"><h3>${t("sec_profile")}</h3>
+     ${setRow(t("s_avatar"), t("s_avatar_d"), `<span id="avBig">${personAv(P.username||"?", S.pub, "xl", P.avatar)}</span><button class="btn sm" id="avUp">${t("upload")}</button>${P.avatar ? `<button class="btn sm" id="avDel">${t("remove_photo")}</button>` : ""}`)}
+     ${setRow(t("username"), t("s_username_d"), P.registered ? `<b style="font-size:16px">@${esc(P.username)}</b><span class="pill up">${t("un_reg")}</span>` : `<span class="muted">${t("acc_none")}</span><button class="btn sm pri" id="accOpen">${t("acc_open")}</button>`)}
+     ${P.registered ? setRow(t("s_email"), t("acc_email_d"), `<span style="user-select:text">${esc(P.email)}</span><button class="btn sm" id="accOut">${t("acc_logout")}</button>`) : ""}
+     <div class="err" id="profErr"></div>
+   </div>
+   <div class="card set-sec" id="sLook"><h3>${t("sec_look")}</h3>
+     ${setRow(t("s_lang"), t("s_lang_d"), langSwitch())}
+     ${setRow(t("s_accent"), t("s_accent_d"), ACCENTS.map(c => `<button class="swatch ${c===(P.accent||ACCENTS[0])?"on":""}" data-acc="${c}" style="background:${c}" aria-label="${c}"></button>`).join(""))}
+   </div>
+   <div class="card set-sec" id="sSec"><h3>${t("sec_security")}</h3>
+     ${setRow(t("s_pw"), t("s_pw_d"), `<div style="flex:1;display:grid;gap:8px"><div class="field"><input id="pwOld" type="password" placeholder="${esc(t("cur_pw"))}"></div><div class="field"><input id="pwNew" type="password" placeholder="${esc(t("new_pw"))}"></div><div class="field"><input id="pwNew2" type="password" placeholder="${esc(t("new_pw2"))}"></div><div style="display:flex;gap:10px;align-items:center"><button class="btn sm pri" id="pwGo">${t("change")}</button><span class="err" id="pwErr" style="min-height:0"></span></div></div>`)}
+     ${setRow(t("s_autolock"), t("s_autolock_d"), `<div class="tabs" id="alTabs">${[0,5,15,30,60].map(m => `<button data-al="${m}" class="${m===al?"on":""}">${m ? t("minutes",{n:m}) : t("off")}</button>`).join("")}</div>`)}
+     ${setRow(t("s_backup"), t("s_backup_d"), `<button class="btn sm" id="bkGo">${t("show_key")}</button>`)}
+     ${setRow(t("s_btc"), t("s_btc_d"), `<button class="btn sm" id="btcKeyGo">${t("show_key")}</button>`, "rowBtc")}
+     ${setRow(t("s_lock"), t("s_lock_d"), `<button class="btn sm" data-a="lock">${t("nav_lock")}</button>`)}
+     ${setRow(t("s_logout"), t("s_logout_d"), `<button class="btn sm sell" data-a="logout">${t("nav_logout")}</button>`, "rowLogout")}
+   </div>
+   <div class="card set-sec" id="sTrade"><h3>${t("sec_trading")}</h3>
+     ${setRow(t("s_jup"), t("s_jup_d"), `<div class="field"><input id="setJk" class="mono" value="${esc(P.jup_key||"")}" autocomplete="off"></div><button class="btn sm" id="setPortal">${t("open_portal")}</button>`)}
+     ${setRow(t("s_rpc"), t("s_rpc_d"), `<div class="field"><input id="setRpc" class="mono" value="${esc(P.rpc||"")}" placeholder="${esc(t("rpc_ph"))}" autocomplete="off"></div>`)}
+     ${setRow(t("s_defbuy"), t("s_defbuy_d"), `<div class="field" style="max-width:200px"><input id="setDef" class="num" value="${esc(P.default_buy||"0.1")}" inputmode="decimal"><span class="unit">SOL</span></div>`)}
+     ${setRow(t("s_instant"), t("s_instant_d"), `<button class="switch ${P.instant_sell ? "on" : ""}" id="instSw" role="switch" aria-checked="${!!P.instant_sell}"><i></i></button><span class="muted" id="instTxt" style="font-size:13px">${P.instant_sell ? t("on") : t("off")}</span>`)}
+     ${setRow(t("s_maximp"), t("s_maximp_d"), `<div class="field" style="max-width:160px"><input id="setImp" class="num" value="${esc(P.max_impact ?? 10)}" inputmode="decimal"><span class="unit">%</span></div>`)}
+     <div style="display:flex;gap:10px;align-items:center;padding-top:10px"><button class="btn pri" id="trGo">${t("save")}</button><span class="err" id="trErr" style="min-height:0"></span></div>
+   </div>
+   <div class="card set-sec" id="sAcc"><h3>${t("acc_server")}</h3>
+     ${setRow(t("acc_server"), t("acc_server_d"), `<div style="flex:1;display:grid;gap:8px"><div class="field"><input id="sbUrl" class="mono" placeholder="https://xxxx.supabase.co" value="${esc((S.acct||{}).url||"")}" autocomplete="off" spellcheck="false"></div><div class="field"><input id="sbKey" class="mono" placeholder="anon / publishable key" value="${esc((S.acct||{}).key||"")}" autocomplete="off" spellcheck="false"></div><div style="display:flex;gap:10px;align-items:center"><button class="btn sm pri" id="sbGo">${t("save")}</button><span class="err" id="sbErr" style="min-height:0"></span></div></div>`)}
+   </div>
+   <div class="card set-sec" id="sAbout"><h3>${t("sec_about")}</h3>
+     ${setRow(t("s_version"), "Kesu Wallet", `<span class="muted">2.6 · Web</span>`)}
+     ${setRow(t("s_data"), t("s_data_d"), `<span class="mono muted" style="font-size:12.5px;user-select:text">${esc(P.data_dir||"")}</span>`)}
+   </div>`;
+  const perr = m => { $("#profErr").textContent = m; };
+  $("#avUp").onclick = () => $("#avFile").click();
+  if ($("#avDel")) $("#avDel").onclick = async () => { try { await call("profile_update", {avatar:""}); S.prof.avatar = ""; updateMe(); renderSettings(); toast(t("saved"), "ok"); } catch(e){ perr(e.message); } };
+  if ($("#accOpen")) $("#accOpen").onclick = () => modalAccount("register");
+  if ($("#accOut")) $("#accOut").onclick = async () => { try { await call("acct_logout"); S.prof = await call("profile_get"); S.acct = await call("acct_status"); updateMe(); renderSettings(); toast(t("acc_logged_out"), "ok"); } catch(e){ perr(e.message); } };
+  $("#sbGo").onclick = async () => { $("#sbErr").textContent = "";
+    try { await call("acct_server", $("#sbUrl").value, $("#sbKey").value); S.acct = await call("acct_status"); toast(t("saved"), "ok"); renderSettings(); } catch(e){ $("#sbErr").textContent = e.message; } };
+  bindLangSwitch(() => { updateMe(); renderSettings(); if (S.port) { renderAssets($("#holdings"), S.port.items, true); } loadMarket(); });
+  $$("[data-acc]").forEach(b => b.onclick = async () => { applyAccent(b.dataset.acc); $$("[data-acc]").forEach(x => x.classList.toggle("on", x === b));
+    try { await call("profile_update", {accent: b.dataset.acc}); S.prof.accent = b.dataset.acc; } catch(e){ perr(e.message); } });
+  const chPw = async () => { const o=$("#pwOld").value, n=$("#pwNew").value, n2=$("#pwNew2").value; $("#pwErr").textContent = "";
+    if (n.length < 8) { $("#pwErr").textContent = t("pw_short"); return; } if (n !== n2) { $("#pwErr").textContent = t("pw_mismatch"); return; }
+    const b = $("#pwGo"); busyBtn(b,true);
+    try { await call("change_password", o, n); busyBtn(b,false); ["#pwOld","#pwNew","#pwNew2"].forEach(i => $(i).value = ""); toast(t("pw_changed"), "ok"); }
+    catch(e){ busyBtn(b,false); $("#pwErr").textContent = e.message; } };
+  $("#pwGo").onclick = chPw; onEnter($("#pwNew2"), chPw);
+  $$("[data-al]").forEach(b => b.onclick = async () => { $$("[data-al]").forEach(x => x.classList.toggle("on", x === b));
+    try { await call("profile_update", {autolock: +b.dataset.al}); S.prof.autolock = +b.dataset.al; toast(t("saved"), "ok", null, 1500); } catch(e){ toast(e.message, "bad"); } });
+  $("#bkGo").onclick = modalBackup; $("#btcKeyGo").onclick = modalBtcKey;
+  $("#setPortal").onclick = () => api.open_url("https://developers.jup.ag/portal");
+  $("#trGo").onclick = async () => { $("#trErr").textContent = "";
+    try { await call("settings_save", $("#setJk").value, $("#setRpc").value); await call("profile_update", {default_buy: $("#setDef").value, max_impact: $("#setImp").value});
+      S.prof.max_impact = parseFloat($("#setImp").value.replace(",", "."));
+      S.prof.jup_key = $("#setJk").value.trim(); S.prof.rpc = $("#setRpc").value.trim(); S.prof.default_buy = $("#setDef").value.trim(); toast(t("saved"), "ok"); }
+    catch(e){ $("#trErr").textContent = e.message; } };
+  $("#instSw").onclick = async () => { const on = !S.prof.instant_sell;
+    try { await call("profile_update", {instant_sell: on}); S.prof.instant_sell = on; $("#instSw").classList.toggle("on", on); $("#instSw").setAttribute("aria-checked", on);
+      $("#instTxt").textContent = on ? t("on") : t("off"); toast(t("saved"), "ok", null, 1500); } catch(e){ toast(e.message, "bad"); } };
+  $$("#setNav button").forEach(b => b.onclick = () => { const s = $("#" + b.dataset.s); if (s) s.scrollIntoView({behavior:"smooth", block:"start"}); });
+}
+// profilkép: kicsinyítés 192x192-re, JPEG
+$("#avFile").addEventListener("change", e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { const img = new Image();
+    img.onload = async () => { const c = document.createElement("canvas"); c.width = c.height = 192; const g = c.getContext("2d");
+      const s = Math.min(img.width, img.height); g.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, 192, 192);
+      const url = c.toDataURL("image/jpeg", 0.85);
+      try { await call("profile_update", {avatar: url}); S.prof.avatar = url; updateMe(); renderSettings(); toast(t("saved"), "ok"); } catch(err){ toast(err.message, "bad"); } };
+    img.onerror = () => toast(t("avatar_big"), "bad"); img.src = rd.result; };
+  rd.readAsDataURL(f);
+});
+
+// =============== Android: vissza gomb ===============
+(() => {
+  const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  if (!App) return;
+  App.addListener("backButton", () => {
+    if ($("#ov").classList.contains("on")) { if (!S.modalLocked) closeModal(); return; }
+    if ($("#gres").classList.contains("on")) { gClose(); return; }
+    if ($("#gate").classList.contains("on")) { App.exitApp(); return; }
+    if (S.page === "token") { $("#backBtn").click(); return; }
+    if (S.page === "wallet") { $("#wBack").click(); return; }
+    if (S.page !== "home") { showPage("home"); return; }
+    App.exitApp();
+  });
+})();
+
+// =============== indulás ===============
+async function boot(){
+  api = window.pywebview.api;
+  const st = await call("state");
+  LANG = st.lang || "en"; applyAccent(st.accent); applyI18n();
+  if (!st.has_wallet) gateWelcome(); else if (!st.unlocked) gateUnlock(st.pubkey); else enterApp();
+  setInterval(() => { if (S.pub && !S.locked && S.port && document.visibilityState === "visible") refreshPortfolio(); }, 30000);
+}
+if (window.pywebview && window.pywebview.api) boot(); else window.addEventListener("pywebviewready", boot);
+</script></body></html>
